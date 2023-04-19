@@ -1,8 +1,10 @@
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Scanner;
 
 public class GUI {
-    static int breakOut = -1;
     static int newAcc;
     Scanner scanner = new Scanner(System.in);
     static String currentUser = "";
@@ -11,20 +13,52 @@ public class GUI {
     boolean loggedIn = false;
     static String cont;
     static String sendMessageTo;
+    static JFrame jf;
+    static JLabel welcomeDisplay;
+    static JLabel breakoutDisplay;
+    static JPanel welcomePanel;
+    static JPanel breakoutPanel;
+    static JPanel customerOrSellerPanel;
+    static JPanel haveAccountPanel;
+    static JPanel newCustomerPanel;
+    static JLabel newCustomerUserNameLabel;
+    static JLabel newCustomerPasswordLabel;
+    static JLabel newCustomerEmailLabel;
+    static JTextField newCustomerUserNameTextField;
+    static JTextField newCustomerPasswordTextField;
+    static JTextField newCustomerEmailTextField;
 
+    static JPanel newSellerPanel;
 
+    static JButton continueBtn;
+    static JButton yesBtn;
+    static JButton noBtn;
+
+    static JButton haveAccountNoBtn;
+    static JButton haveAccountYesBtn;
+
+    static JButton customerBtn;
+    static JButton sellerBtn;
+    static JLabel customerOrSellerLabel;
+    static JLabel haveAccountLabel;
+
+    static boolean breakOut;
     public static void main(String[] args) {
-        while (true) {
+        // jFrame
+        jf = new JFrame("Messaging System");
+        breakOut = false;
 
-            // welcomeDisplay
-            JOptionPane.showMessageDialog(null, "Welcome to the messaging System", "Welcome",
-                    JOptionPane.INFORMATION_MESSAGE);
-            breakoutDisplay();
-            if (breakOut == 2)
-                break;
-            else {
+        // welcomeDisplay
+        welcomePanel = new JPanel();
+        welcomeDisplay = new JLabel("Welcome to the messaging system");
+        continueBtn = new JButton("Continue");
+        continueBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                welcomePanel.setVisible(false);
+                breakoutDisplay();
                 customerOrUserQuestionDisplay();
-
+                System.out.println("user: " + userChoice);
                 // ================= Customer Functionality ================= //
                 if (userChoice == 1) {
                     haveAccountDisplay();
@@ -34,13 +68,12 @@ public class GUI {
                     }
                     // new account
                     if (newAcc == 2) {
+                        System.out.println("hit1");
                         newCustomerDisplay();
                     }
-
                     // ================= Seller Functionality ================= //
                 } else {
                     haveAccountDisplay();
-
                     // login for seller
                     if (newAcc == 1) {
                         loginSellerDisplay();
@@ -51,31 +84,125 @@ public class GUI {
                     }
                 }
             }
-        }
+        });
+        welcomePanel.setLayout(new GridBagLayout());
+        welcomePanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        welcomePanel.add(welcomeDisplay);
+        welcomePanel.add(continueBtn);
+
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        jf.setSize(720, 576);
+        jf.add(welcomePanel);
+        jf.setVisible(true);
+        jf.setLocationRelativeTo(null);
     }
     public static void breakoutDisplay() {
-        // breakoutDisplay
-        do {
-            breakOut = Integer.parseInt(JOptionPane.showInputDialog(null, "Would you like to use this system? \n1. Yes\n2. No", "breakout", JOptionPane.QUESTION_MESSAGE));
-        } while (breakOut != 1 && breakOut != 2);
+        breakoutPanel = new JPanel();
+        breakoutPanel.setLayout(new GridBagLayout());
+        breakoutDisplay = new JLabel("Would you like to use this system?");
+        noBtn = new JButton("No");
+        yesBtn = new JButton("Yes");
+        yesBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                breakoutPanel.setVisible(false);
+                customerOrUserQuestionDisplay();
+            }
+        });
+        noBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Quit!");
+                breakOut = true;
+                jf.dispose();
+            }
+        });
+        breakoutPanel.add(breakoutDisplay);
+        breakoutPanel.add(yesBtn);
+        breakoutPanel.add(noBtn);
+        breakoutPanel.setVisible(true);
+        jf.add(breakoutPanel);
+        System.out.println("break");
     }
     public static void customerOrUserQuestionDisplay() {
-        do {
-            // customer / user display
-            userChoice = Integer.parseInt(JOptionPane.showInputDialog(null, "Are you a customer or seller? \n1. Customer\n2. Seller",
-                    "c or s", JOptionPane.QUESTION_MESSAGE));
-        } while (userChoice != 2 && userChoice != 1);
-
+        // customer / user display
+        customerOrSellerPanel = new JPanel();
+        customerOrSellerLabel = new JLabel("Are you a customer or seller?");
+        customerOrSellerPanel.setLayout(new GridBagLayout());
+        customerBtn = new JButton("Customer");
+        sellerBtn = new JButton("Seller");
+        customerBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                customerOrSellerPanel.setVisible(false);
+                userChoice = 1;
+                System.out.println("user choice: " + userChoice);
+                System.out.println("customer");
+            }
+        });
+        sellerBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                customerOrSellerPanel.setVisible(false);
+                userChoice = 2;
+                System.out.println("user choice: " + userChoice);
+                System.out.println("seller");
+            }
+        });
+        customerOrSellerPanel.add(customerOrSellerLabel);
+        customerOrSellerPanel.add(customerBtn);
+        customerOrSellerPanel.add(sellerBtn);
+        customerOrSellerPanel.setVisible(true);
+        jf.add(customerOrSellerPanel);
+        jf.setVisible(true);
     }
+
     public static void haveAccountDisplay() {
-        do {
-            // new account display
-            newAcc = Integer.parseInt(JOptionPane.showInputDialog(null, "Do you already have an account? \n1. Yes\n2. No",
-                    "newAccount", JOptionPane.QUESTION_MESSAGE));
-        } while (newAcc != 2 && newAcc != 1);
+        haveAccountPanel = new JPanel();
+        haveAccountPanel.setLayout(new GridBagLayout());
+        haveAccountLabel = new JLabel("Do you already have an account");
+        haveAccountYesBtn = new JButton("Yes");
+        haveAccountNoBtn = new JButton("No");
+        haveAccountNoBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("noooo");
+                newAcc = 2;
+            }
+        });
+        haveAccountYesBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("yesssss");
+                newAcc = 1;
+
+            }
+        });
+        haveAccountPanel.add(haveAccountLabel);
+        haveAccountPanel.add(haveAccountYesBtn);
+        haveAccountPanel.add(haveAccountNoBtn);
+        haveAccountPanel.setVisible(true);
+        jf.add(haveAccountPanel);
     }
     public static void newCustomerDisplay() {
         // userName display
+        System.out.println("hit!");
+        newCustomerPanel = new JPanel();
+        newCustomerUserNameLabel = new JLabel("Please enter a username");
+        newCustomerUserNameTextField = new JTextField();
+        newCustomerPasswordLabel = new JLabel("Please enter a password");
+        newCustomerPasswordTextField = new JTextField();
+        newCustomerEmailLabel = new JLabel("Please enter an email");
+        newCustomerEmailTextField = new JTextField();
+        newCustomerPanel.add(newCustomerUserNameLabel);
+        newCustomerPanel.add(newCustomerUserNameTextField);
+        newCustomerPanel.add(newCustomerPasswordLabel);
+        newCustomerPanel.add(newCustomerPasswordTextField);
+        newCustomerPanel.add(newCustomerEmailLabel);
+        newCustomerPanel.add(newCustomerEmailTextField);
+        newCustomerPanel.setVisible(true);
+        jf.add(newCustomerPanel);
+
         currentUser = JOptionPane.showInputDialog(null, "Please enter a username",
                 "cUserName", JOptionPane.QUESTION_MESSAGE);
 
