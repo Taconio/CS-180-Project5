@@ -14,37 +14,37 @@ import java.io.*;
 
 
 public class MessagingApp extends JComponent implements Runnable {
-    MessagingApp messagingApp;
+    private MessagingApp messagingApp;
     boolean isCustomer;
     boolean isSeller;
-    JFrame frame;
-    JPanel welcomeScreen;
-    JPanel sellerLogin;
-    JPanel customerLogin;
-    JPanel customerNewAccount;
-    JPanel sellerNewAccount;
-    JPanel messagingPanel;
-    String currentUser;
+    private JFrame frame;
+    private JPanel welcomeScreen;
+    private JPanel sellerLogin;
+    private JPanel customerLogin;
+    private JPanel customerNewAccount;
+    private JPanel sellerNewAccount;
+    private JPanel messagingPanel;
+    private String currentUser;
 
-    JTextArea username;
-    JTextArea sUsername;
-    JTextArea password;
-    JTextArea sPassword;
-    JTextArea newUsername;
-    JTextArea newPassword;
-    JTextArea newEmail;
-    JTextArea sNewUsername;
-    JTextArea sNewPassword;
-    JTextArea sNewEmail;
-    JTextArea sNewStore;
-    Customer customer;
-    Seller seller;
-    Socket socket;
-    ObjectOutputStream oos;
-    ObjectInputStream ois;
+    private JTextArea username;
+    private JTextArea sUsername;
+    private JTextArea password;
+    private JTextArea sPassword;
+    private JTextArea newUsername;
+    private JTextArea newPassword;
+    private JTextArea newEmail;
+    private JTextArea sNewUsername;
+    private JTextArea sNewPassword;
+    private JTextArea sNewEmail;
+    private JTextArea sNewStore;
+    private Customer customer;
+    private Seller seller;
+    private Socket socket;
+    private ObjectOutputStream oos;
+    private ObjectInputStream ois;
 
-    BufferedReader reader;
-    PrintWriter writer;
+    private BufferedReader reader;
+    private PrintWriter writer;
     /* action listener for buttons */
     ActionListener actionListener = new ActionListener() {
         @Override
@@ -59,12 +59,12 @@ public class MessagingApp extends JComponent implements Runnable {
                 isSeller = true;
                 setCurrentPanel(sellerLogin);
             }
-            if(actionCommand.equalsIgnoreCase("Login")){
+            if (actionCommand.equalsIgnoreCase("Login")) {
                 String pw;
-                if(isCustomer){
+                if (isCustomer) {
                     currentUser = username.getText();
                     pw = password.getText();
-                    writer.println("Login Customer:"+ currentUser + "," + pw);
+                    writer.println("Login Customer:" + currentUser + "," + pw);
                     writer.flush();
                     try {
                         customer = (Customer) ois.readObject();
@@ -75,14 +75,13 @@ public class MessagingApp extends JComponent implements Runnable {
                         } else {
                             setCurrentPanel(messagingPanel);
                         }
-                    }catch(Exception y){
+                    } catch (Exception y) {
                         y.printStackTrace();
                     }
-                }
-                else{
+                } else {
                     currentUser = sUsername.getText();
                     pw = sPassword.getText();
-                    writer.println("Login Seller:"+ currentUser + "," + pw);
+                    writer.println("Login Seller:" + currentUser + "," + pw);
                     writer.flush();
                     try {
                         seller = (Seller) ois.readObject();
@@ -93,27 +92,27 @@ public class MessagingApp extends JComponent implements Runnable {
                         } else {
                             setCurrentPanel(messagingPanel);
                         }
-                    }catch(Exception y){
+                    } catch (Exception y) {
                         y.printStackTrace();
                     }
                 }
+                setupListOfMessages();
             }
-            if(actionCommand.equalsIgnoreCase("Create New Account")){
-                if(isCustomer){
+            if (actionCommand.equalsIgnoreCase("Create New Account")) {
+                if (isCustomer) {
                     setCurrentPanel(customerNewAccount);
-                }
-                else{
+                } else {
                     setCurrentPanel(sellerNewAccount);
                 }
             }
-            if(actionCommand.equalsIgnoreCase("Create")){
+            if (actionCommand.equalsIgnoreCase("Create")) {
                 String pw;
                 String email;
-                if(isCustomer){
+                if (isCustomer) {
                     currentUser = newUsername.getText();
                     pw = newPassword.getText();
                     email = newEmail.getText();
-                    writer.println("Create Customer:"+ currentUser + "," + pw + "," + email);
+                    writer.println("Create Customer:" + currentUser + "," + pw + "," + email);
                     writer.flush();
                     try {
                         customer = (Customer) ois.readObject();
@@ -124,16 +123,15 @@ public class MessagingApp extends JComponent implements Runnable {
                         } else {
                             setCurrentPanel(messagingPanel);
                         }
-                    }catch(Exception y){
+                    } catch (Exception y) {
                         y.printStackTrace();
                     }
-                }
-                else{
+                } else {
                     currentUser = sNewUsername.getText();
                     pw = sNewPassword.getText();
                     email = sNewEmail.getText();
                     String store = sNewStore.getText();
-                    writer.println("Create Seller:"+ currentUser + "," + pw + "," + email + "," + store);
+                    writer.println("Create Seller:" + currentUser + "," + pw + "," + email + "," + store);
                     writer.flush();
                     try {
                         seller = (Seller) ois.readObject();
@@ -144,12 +142,12 @@ public class MessagingApp extends JComponent implements Runnable {
                         } else {
                             setCurrentPanel(messagingPanel);
                         }
-                    }catch(Exception y){
+                    } catch (Exception y) {
                         y.printStackTrace();
                     }
                 }
             }
-            if(actionCommand.equalsIgnoreCase("Logout")){
+            if (actionCommand.equalsIgnoreCase("Logout")) {
                 closeProgram();
             }
         }
@@ -175,7 +173,7 @@ public class MessagingApp extends JComponent implements Runnable {
         sellerNewAccount.setBounds(0, 0, 720, 576);
         sellerNewAccount.setLayout(null);
         messagingPanel = new JPanel();
-        messagingPanel.setBounds(0, 0, 720, 576);
+        messagingPanel.setBounds(0, 0, 576, 720);
         messagingPanel.setLayout(null);
         frame = new JFrame("Messaging App");
         username = new JTextArea("Username");
@@ -197,9 +195,9 @@ public class MessagingApp extends JComponent implements Runnable {
     }
 
     public void run() {
-        try{
+        try {
             establishConnection();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         /* set up JFrame */
@@ -220,13 +218,9 @@ public class MessagingApp extends JComponent implements Runnable {
         JLabel welcomeText = new JLabel("Welcome to the messaging app! Are you a Customer or a Seller?");
         welcomeText.setBounds(180, 140, 400, 50);
         JButton customerButton = new JButton("Customer");
-        customerButton.addActionListener(actionListener);
-        customerButton.setBackground(Color.BLACK);
-        customerButton.setForeground(Color.WHITE);
+        buttonActivation(customerButton);
         JButton sellerButton = new JButton("Seller");
-        sellerButton.addActionListener(actionListener);
-        sellerButton.setBackground(Color.BLACK);
-        sellerButton.setForeground(Color.WHITE);
+        buttonActivation(sellerButton);
         customerButton.setBounds(280, 220, 150, 50);
         sellerButton.setBounds(280, 290, 150, 50);
 
@@ -242,20 +236,16 @@ public class MessagingApp extends JComponent implements Runnable {
         //customer login panel
         JButton login = new JButton("Login");
         login.setBounds(285, 250, 150, 20);
-        login.addActionListener(actionListener);
-        login.setBackground(Color.BLACK);
-        login.setForeground(Color.WHITE);
+        buttonActivation(login);
         JButton newAccount = new JButton("Create New Account");
         newAccount.setBounds(285, 280, 150, 20);
-        newAccount.addActionListener(actionListener);
-        newAccount.setBackground(Color.BLACK);
-        newAccount.setForeground(Color.WHITE);
+        buttonActivation(newAccount);
 
         JLabel welcomeCustomer = new JLabel("Welcome Customer! Login or Create new account.");
         welcomeCustomer.setBounds(230, 140, 300, 50);
 
-        username.setBounds(285, 190, 150,20);
-        password.setBounds(285, 220, 150,20);
+        username.setBounds(285, 190, 150, 20);
+        password.setBounds(285, 220, 150, 20);
         customerLogin.add(welcomeCustomer);
         customerLogin.add(username);
         customerLogin.add(password);
@@ -265,21 +255,17 @@ public class MessagingApp extends JComponent implements Runnable {
         // seller login panel
         JButton sLogin = new JButton("Login");
         sLogin.setBounds(285, 250, 150, 20);
-        sLogin.addActionListener(actionListener);
-        sLogin.setBackground(Color.BLACK);
-        sLogin.setForeground(Color.WHITE);
+        buttonActivation(sLogin);
 
         JButton sNewAccount = new JButton("Create New Account");
+        buttonActivation(sNewAccount);
         sNewAccount.setBounds(285, 280, 150, 20);
-        sNewAccount.addActionListener(actionListener);
-        sNewAccount.setBackground(Color.BLACK);
-        sNewAccount.setForeground(Color.WHITE);
 
         JLabel welcomeSeller = new JLabel("Welcome Seller! Login or Create new account.");
         welcomeSeller.setBounds(230, 140, 300, 50);
 
-        sUsername.setBounds(285, 190, 150,20);
-        sPassword.setBounds(285, 220, 150,20);
+        sUsername.setBounds(285, 190, 150, 20);
+        sPassword.setBounds(285, 220, 150, 20);
         sellerLogin.add(welcomeSeller);
         sellerLogin.add(sUsername);
         sellerLogin.add(sPassword);
@@ -289,14 +275,12 @@ public class MessagingApp extends JComponent implements Runnable {
         // new account panel for customer
         JLabel customerPrompt = new JLabel("Enter information for new account.");
         customerPrompt.setBounds(265, 140, 300, 50);
-        newUsername.setBounds(285, 190, 150,20);
-        newPassword.setBounds(285, 220, 150,20);
-        newEmail.setBounds(285, 250, 150,20);
+        newUsername.setBounds(285, 190, 150, 20);
+        newPassword.setBounds(285, 220, 150, 20);
+        newEmail.setBounds(285, 250, 150, 20);
         JButton create = new JButton("Create");
-        create.addActionListener(actionListener);
+        buttonActivation(create);
         create.setBounds(285, 280, 150, 20);
-        create.setBackground(Color.BLACK);
-        create.setForeground(Color.WHITE);
 
         customerNewAccount.add(customerPrompt);
         customerNewAccount.add(newUsername);
@@ -307,15 +291,14 @@ public class MessagingApp extends JComponent implements Runnable {
         // new account panel for seller
         JLabel sellerPrompt = new JLabel("Enter information for new account.");
         sellerPrompt.setBounds(265, 140, 300, 50);
-        sNewUsername.setBounds(285, 190, 150,20);
-        sNewPassword.setBounds(285, 220, 150,20);
-        sNewEmail.setBounds(285, 250, 150,20);
-        sNewStore.setBounds(285, 280, 150,20);
+        sNewUsername.setBounds(285, 190, 150, 20);
+        sNewPassword.setBounds(285, 220, 150, 20);
+        sNewEmail.setBounds(285, 250, 150, 20);
+        sNewStore.setBounds(285, 280, 150, 20);
         JButton sCreate = new JButton("Create");
-        sCreate.addActionListener(actionListener);
         sCreate.setBounds(285, 310, 150, 20);
-        sCreate.setBackground(Color.BLACK);
-        sCreate.setForeground(Color.WHITE);
+        buttonActivation(sCreate);
+
 
         sellerNewAccount.add(sellerPrompt);
         sellerNewAccount.add(sNewUsername);
@@ -325,21 +308,27 @@ public class MessagingApp extends JComponent implements Runnable {
         sellerNewAccount.add(sCreate);
 
         JButton logout = new JButton("Logout");
-        logout.addActionListener(actionListener);
-        logout.setBounds(20, 20, 100, 100);
+        logout.setBounds(10, 496, 180, 30);
+        buttonActivation(logout);
         messagingPanel.add(logout);
+        JPanel messagingLog = new JPanel();
+        messagingLog.setBounds(200, 0, 570, 576);
+        messagingLog.setBackground(Color.WHITE);
+        messagingPanel.add(messagingLog);
 
 
     }
-    public void establishConnection()  throws UnknownHostException, IOException, ClassNotFoundException{
+
+    public void establishConnection() throws UnknownHostException, IOException, ClassNotFoundException {
         socket = new Socket("localhost", 4242);
         oos = new ObjectOutputStream(socket.getOutputStream());
         ois = new ObjectInputStream(socket.getInputStream());
         reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         writer = new PrintWriter(socket.getOutputStream());
     }
-    public void closeProgram(){
-        try{
+
+    public void closeProgram() {
+        try {
             writer.println("Logout:");
             writer.flush();
             frame.setVisible(false);
@@ -348,13 +337,39 @@ public class MessagingApp extends JComponent implements Runnable {
             reader.close();
             oos.close();
             ois.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public void setCurrentPanel(JPanel currentPanel){
+
+    public void setCurrentPanel(JPanel currentPanel) {
         frame.setContentPane(currentPanel);
         frame.invalidate();
         frame.validate();
+    }
+
+    public void buttonActivation(JButton b) {
+        b.setBackground(Color.BLACK);
+        b.setForeground(Color.WHITE);
+        b.addActionListener(actionListener);
+    }
+
+    public void setupListOfMessages() {
+        String[] userMessages;
+        JLabel messagesWith;
+        if (isCustomer) {
+            messagesWith = new JLabel("Select Seller to Message:");
+            messagesWith.setBounds(10, 0, 180, 20);
+            userMessages = customer.getMessagedSellers();
+        } else {
+            messagesWith = new JLabel("Select Customer to Message:");
+            messagesWith.setBounds(10, 0, 180, 20);
+            userMessages = seller.getMessagedCustomers();
+        }
+        JComboBox<String> messageList = new JComboBox<String>(userMessages);
+        messageList.addActionListener(actionListener);
+        messageList.setBounds(10, 30, 180, 25);
+        messagingPanel.add(messageList);
+        messagingPanel.add(messagesWith);
     }
 }
