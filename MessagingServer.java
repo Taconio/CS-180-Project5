@@ -23,6 +23,7 @@ public class MessagingServer {
     private ArrayList<Seller> blockedSellers;
     private ArrayList<Customer> blockedCustomers;
     private Scanner scanner;
+
     public MessagingServer() {
         currentUser = "";
         messages = new HashMap<String, ArrayList<String>>();
@@ -35,64 +36,66 @@ public class MessagingServer {
         customer = null;
         seller = null;
     }
-    public static void main(String [] args){
+
+    public static void main(String[] args) {
         MessagingServer ms = new MessagingServer();
-        try{
+        try {
             ms.startProgram();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public void startProgram() throws UnknownHostException, IOException, ClassNotFoundException{
+
+    public void startProgram() throws UnknownHostException, IOException, ClassNotFoundException {
         ServerSocket serverSocket = new ServerSocket(4242); //port 4242 works
         Socket socket = serverSocket.accept();
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter writer = new PrintWriter(socket.getOutputStream());
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-        while(true){
+        while (true) {
             String line = reader.readLine();
             String action = line.substring(0, line.indexOf(":"));
-            if(action.equalsIgnoreCase("Login Customer")){
-                String [] userInfo = line.substring(line.indexOf(":")+1).split(",");
+            if (action.equalsIgnoreCase("Login Customer")) {
+                String[] userInfo = line.substring(line.indexOf(":") + 1).split(",");
                 boolean successful = loginCustomer(userInfo[0], userInfo[1]);
-                if(successful == false){
+                if (successful == false) {
                     Customer x = null;
                 }
                 oos.writeObject(customer);
                 oos.flush();
             }
-            if(action.equalsIgnoreCase("Login Seller")){
-                String [] userInfo = line.substring(line.indexOf(":")+1).split(",");
+            if (action.equalsIgnoreCase("Login Seller")) {
+                String[] userInfo = line.substring(line.indexOf(":") + 1).split(",");
                 boolean successful = loginSeller(userInfo[0], userInfo[1]);
-                if(successful == false){
+                if (successful == false) {
                     Seller x = null;
                 }
                 oos.writeObject(seller);
                 oos.flush();
             }
-            if(action.equalsIgnoreCase("Create Customer")){
-                String [] userInfo = line.substring(line.indexOf(":")+1).split(",");
+            if (action.equalsIgnoreCase("Create Customer")) {
+                String[] userInfo = line.substring(line.indexOf(":") + 1).split(",");
                 boolean successful = makeNewCustomer(userInfo[0], userInfo[1], userInfo[2]);
-                if(successful == false){
+                if (successful == false) {
                     Customer x = null;
                 }
                 oos.writeObject(customer);
                 oos.flush();
             }
-            if(action.equalsIgnoreCase("Create Seller")){
-                String [] userInfo = line.substring(line.indexOf(":")+1).split(",");
+            if (action.equalsIgnoreCase("Create Seller")) {
+                String[] userInfo = line.substring(line.indexOf(":") + 1).split(",");
                 boolean successful = makeNewSeller(userInfo[0], userInfo[1], userInfo[2], userInfo[3]);
-                if(successful == false){
+                if (successful == false) {
                     Seller x = null;
                 }
                 oos.writeObject(seller);
                 oos.flush();
             }
-            if(action.equalsIgnoreCase("Logout")){
-                if(customer != null && currentUser != null)
+            if (action.equalsIgnoreCase("Logout")) {
+                if (customer != null && currentUser != null)
                     customer.updateInfo();
-                else if(seller != null && currentUser != null)
+                else if (seller != null && currentUser != null)
                     seller.updateInfo();
                 break;
             }
@@ -102,6 +105,7 @@ public class MessagingServer {
         writer.close();
         reader.close();
     }
+
     /*
         Makes new Customer
      */
@@ -130,6 +134,7 @@ public class MessagingServer {
         customer = new Customer(currentUser, password, email);
         return true;
     }
+
     public boolean makeNewSeller(String u, String p, String em, String st) {
         currentUser = u;
         String password = p;
@@ -169,11 +174,23 @@ public class MessagingServer {
             if (username.equals(user) && pass.equals(password)) {
                 loggedIn = true;
                 customer = new Customer(currentUser, password, mail);
+                if (messages.size() > 0) {
+                    Set<String> keys = messages.keySet();
+                    Iterator<String> y = keys.iterator();
+                    String[] messagedUsers = new String[messages.size()];
+                    int x = 0;
+                    while (y.hasNext()) {
+                        messagedUsers[x] = y.next();
+                        x++;
+                    }
+                    customer.setMessagedSellers(messagedUsers);
+                }
                 break;
             }
         }
         return loggedIn;
     }
+
     public boolean loginSeller(String u, String p) {
         boolean loggedIn = false;
         String username = u;
@@ -188,11 +205,23 @@ public class MessagingServer {
             if (username.equals(user) && pass.equals(password)) {
                 loggedIn = true;
                 seller = new Seller(currentUser, password, mail, store);
+                if (messages.size() > 0) {
+                    Set<String> keys = messages.keySet();
+                    Iterator<String> y = keys.iterator();
+                    String[] messagedUsers = new String[messages.size()];
+                    int x = 0;
+                    while (y.hasNext()) {
+                        messagedUsers[x] = y.next();
+                        x++;
+                    }
+                    seller.setMessagedCustomers(messagedUsers);
+                }
                 break;
             }
         }
         return loggedIn;
     }
+
     /*
         Reads all the existing users from the info file in order to check that they exist + calls method to
          import conversations
