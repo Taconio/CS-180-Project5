@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 import java.net.*;
 import java.io.*;
 
@@ -23,10 +24,7 @@ public class MessagingApp extends JComponent implements Runnable {
     private JPanel customerNewAccount;
     private JPanel sellerNewAccount;
     private JPanel messagingPanel;
-    private JPanel searchChatPannel;
-
     private String currentUser;
-
 
     private JTextArea username;
     private JTextArea sUsername;
@@ -39,7 +37,6 @@ public class MessagingApp extends JComponent implements Runnable {
     private JTextArea sNewPassword;
     private JTextArea sNewEmail;
     private JTextArea sNewStore;
-    private JTextField searchChatTextField;
     private Customer customer;
     private Seller seller;
     private Socket socket;
@@ -64,6 +61,7 @@ public class MessagingApp extends JComponent implements Runnable {
             }
             if (actionCommand.equalsIgnoreCase("Login")) {
                 String pw;
+                JLabel messagesWith;
                 if (isCustomer) {
                     currentUser = username.getText();
                     pw = password.getText();
@@ -81,6 +79,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     } catch (Exception y) {
                         y.printStackTrace();
                     }
+                    messagesWith = new JLabel("Select Seller to Message:");
+                    messagesWith.setBounds(10, 0, 180, 20);
                 } else {
                     currentUser = sUsername.getText();
                     pw = sPassword.getText();
@@ -98,7 +98,10 @@ public class MessagingApp extends JComponent implements Runnable {
                     } catch (Exception y) {
                         y.printStackTrace();
                     }
+                    messagesWith = new JLabel("Select Customer to Message:");
+                    messagesWith.setBounds(10, 0, 180, 20);
                 }
+                messagingPanel.add(messagesWith);
                 setupListOfMessages();
             }
             if (actionCommand.equalsIgnoreCase("Create New Account")) {
@@ -153,9 +156,6 @@ public class MessagingApp extends JComponent implements Runnable {
             if (actionCommand.equalsIgnoreCase("Logout")) {
                 closeProgram();
             }
-            if (actionCommand.equalsIgnoreCase("New Chat")) {
-                setCurrentPanel(searchChatPannel);
-            }
         }
     };
 
@@ -181,9 +181,6 @@ public class MessagingApp extends JComponent implements Runnable {
         messagingPanel = new JPanel();
         messagingPanel.setBounds(0, 0, 576, 720);
         messagingPanel.setLayout(null);
-        searchChatPannel = new JPanel();
-        searchChatPannel.setBounds(0, 0, 576, 720);
-        searchChatPannel.setLayout(null);
         frame = new JFrame("Messaging App");
         username = new JTextArea("Username");
         password = new JTextArea("Password");
@@ -196,8 +193,6 @@ public class MessagingApp extends JComponent implements Runnable {
         sNewPassword = new JTextArea("Password");
         sNewEmail = new JTextArea("Email");
         sNewStore = new JTextArea("Store Name");
-        searchChatTextField = new JTextField("Search User");
-
     }
 
 
@@ -322,25 +317,11 @@ public class MessagingApp extends JComponent implements Runnable {
         logout.setBounds(10, 496, 180, 30);
         buttonActivation(logout);
         messagingPanel.add(logout);
-
-        JButton newChat = new JButton("New Chat");
-        buttonActivation(newChat);
-        newChat.setBounds(500, 496, 180, 30);
-        messagingPanel.add(newChat);
-
         JPanel messagingLog = new JPanel();
         messagingLog.setBounds(200, 0, 570, 576);
         messagingLog.setBackground(Color.WHITE);
         messagingPanel.add(messagingLog);
 
-
-        searchChatTextField.setBounds(260, 200, 180, 50);
-        searchChatTextField.setHorizontalAlignment(JTextField.CENTER);
-        JButton searchButton = new JButton("Search");
-        searchButton.setBounds(260,280,180,30);
-        buttonActivation(searchButton);
-        searchChatPannel.add(searchChatTextField);
-        searchChatPannel.add(searchButton);
 
     }
 
@@ -381,20 +362,14 @@ public class MessagingApp extends JComponent implements Runnable {
 
     public void setupListOfMessages() {
         String[] userMessages;
-        JLabel messagesWith;
-        if (isCustomer) {
-            messagesWith = new JLabel("Select Seller to Message:");
-            messagesWith.setBounds(10, 0, 180, 20);
+        if (isCustomer)
             userMessages = customer.getMessagedSellers();
-        } else {
-            messagesWith = new JLabel("Select Customer to Message:");
-            messagesWith.setBounds(10, 0, 180, 20);
+        else
             userMessages = seller.getMessagedCustomers();
-        }
+        //account for no users
         JComboBox<String> messageList = new JComboBox<String>(userMessages);
         messageList.addActionListener(actionListener);
         messageList.setBounds(10, 30, 180, 25);
         messagingPanel.add(messageList);
-        messagingPanel.add(messagesWith);
     }
 }
