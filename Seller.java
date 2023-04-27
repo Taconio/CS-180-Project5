@@ -8,11 +8,11 @@ import java.io.*;
  * @version 04-10-2023
  */
 
-public class Seller {
+public class Seller implements Serializable {
     private String username;
     private String password;
     private String email;
-    private String storeName;
+    private String[] storeName;
     private String[] messagedCustomers;
     private String[] blockedCustomers;
 
@@ -20,7 +20,7 @@ public class Seller {
         For new accounts
      */
 
-    public Seller(String username, String password, String email, String storeName) {
+    public Seller(String username, String password, String email, String[] storeName) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -33,7 +33,7 @@ public class Seller {
         For prexisting accounts
      */
 
-    public Seller(String username, String password, String email, String storeName, String[] messagedCustomers,
+    public Seller(String username, String password, String email, String[] storeName, String[] messagedCustomers,
                   String[] blockedCustomers) {
         this.username = username;
         this.password = password;
@@ -63,11 +63,11 @@ public class Seller {
         this.password = password;
     }
 
-    public String getStoreName() {
+    public String[] getStoreName() {
         return storeName;
     }
 
-    public void setStoreName(String storeName) {
+    public void setStoreName(String[] storeName) {
         this.storeName = storeName;
     }
 
@@ -150,10 +150,18 @@ public class Seller {
             e.printStackTrace();
         }
 
+        //Line that will save info delimited by commas
+        String userInfo = username + "," + password + "," + email + "," + "Seller";
+        for (int i = 0; i < storeName.length; i++) {
+            userInfo = userInfo + "," + storeName[i];
+        }
 
-        String userInfo = username + "," + password + "," + email + "," + "Seller" + "," + storeName;
+        //Line that will save users with existing conversations
         String messages = "";
+
+        //Line that will save users that are blocked by that user
         String blocked = "";
+
         if (messagedCustomers == null)
             messages = "null";
         else {
