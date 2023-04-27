@@ -24,6 +24,7 @@ public class MessagingApp extends JComponent implements Runnable {
     private JPanel customerNewAccount;
     private JPanel sellerNewAccount;
     private JPanel messagingPanel;
+    private JPanel messagingLog;
     private String currentUser;
 
     private JTextArea username;
@@ -33,6 +34,7 @@ public class MessagingApp extends JComponent implements Runnable {
     private JTextArea newUsername;
     private JTextArea newPassword;
     private JTextArea newEmail;
+    private JTextArea messageBox;
     private JTextArea sNewUsername;
     private JTextArea sNewPassword;
     private JTextArea sNewEmail;
@@ -40,11 +42,20 @@ public class MessagingApp extends JComponent implements Runnable {
     private Customer customer;
     private Seller seller;
     private Socket socket;
+    private ArrayList<Customer> customers;
+    private ArrayList<Seller> sellers;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
-
     private BufferedReader reader;
     private PrintWriter writer;
+    private JComboBox<String> messageList;
+    private JComboBox<String> newMessageList;
+    private String[] listOfUsers = new String[0];
+    private String[] newChatOptions = new String[0];
+    private JTextPane messagesPane;
+    private boolean startingNew;
+    private String sendMessageTo;
+
     /* action listener for buttons */
     ActionListener actionListener = new ActionListener() {
         @Override
@@ -62,6 +73,7 @@ public class MessagingApp extends JComponent implements Runnable {
             if (actionCommand.equalsIgnoreCase("Login")) {
                 String pw;
                 JLabel messagesWith;
+                JLabel newMessagesOption;
                 if (isCustomer) {
                     currentUser = username.getText();
                     pw = password.getText();
@@ -69,6 +81,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     writer.flush();
                     try {
                         customer = (Customer) ois.readObject();
+                        listOfUsers = (String[]) ois.readObject();
+                        newChatOptions = (String[]) ois.readObject();
                         if (customer == null) {
                             closeProgram();
                             JOptionPane.showMessageDialog(null, "Wrong Login!", "Error! Wrong login! Try again later."
@@ -81,6 +95,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     }
                     messagesWith = new JLabel("Select Seller to Message:");
                     messagesWith.setBounds(10, 0, 180, 20);
+                    newMessagesOption = new JLabel("Start Conversation with Seller: ");
+                    newMessagesOption.setBounds(10, 70, 180, 20);
                 } else {
                     currentUser = sUsername.getText();
                     pw = sPassword.getText();
@@ -88,6 +104,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     writer.flush();
                     try {
                         seller = (Seller) ois.readObject();
+                        listOfUsers = (String[]) ois.readObject();
+                        newChatOptions = (String[]) ois.readObject();
                         if (seller == null) {
                             closeProgram();
                             JOptionPane.showMessageDialog(null, "Wrong Login!", "Error! Wrong login! Try again later."
@@ -100,9 +118,13 @@ public class MessagingApp extends JComponent implements Runnable {
                     }
                     messagesWith = new JLabel("Select Customer to Message:");
                     messagesWith.setBounds(10, 0, 180, 20);
+                    newMessagesOption = new JLabel("Start Conversation with Customer: ");
+                    newMessagesOption.setBounds(10, 70, 180, 20);
                 }
                 messagingPanel.add(messagesWith);
-                setupListOfMessages();
+                setupListOfMessages(listOfUsers);
+                messagingPanel.add(newMessagesOption);
+                setupNewMessageOption(newChatOptions);
             }
             if (actionCommand.equalsIgnoreCase("Create New Account")) {
                 if (isCustomer) {
@@ -114,6 +136,8 @@ public class MessagingApp extends JComponent implements Runnable {
             if (actionCommand.equalsIgnoreCase("Create")) {
                 String pw;
                 String email;
+                JLabel messagesWith;
+                JLabel newMessagesOption;
                 if (isCustomer) {
                     currentUser = newUsername.getText();
                     pw = newPassword.getText();
@@ -122,6 +146,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     writer.flush();
                     try {
                         customer = (Customer) ois.readObject();
+                        listOfUsers = (String[]) ois.readObject();
+                        newChatOptions = (String[]) ois.readObject();
                         if (customer == null) {
                             closeProgram();
                             JOptionPane.showMessageDialog(null, "Error!", "Error! Login taken! Try again later."
@@ -132,6 +158,10 @@ public class MessagingApp extends JComponent implements Runnable {
                     } catch (Exception y) {
                         y.printStackTrace();
                     }
+                    messagesWith = new JLabel("Select Seller to Message:");
+                    messagesWith.setBounds(10, 0, 180, 20);
+                    newMessagesOption = new JLabel("Start Conversation with Seller: ");
+                    newMessagesOption.setBounds(10, 70, 180, 20);
                 } else {
                     currentUser = sNewUsername.getText();
                     pw = sNewPassword.getText();
@@ -141,6 +171,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     writer.flush();
                     try {
                         seller = (Seller) ois.readObject();
+                        listOfUsers = (String[]) ois.readObject();
+                        newChatOptions = (String[]) ois.readObject();
                         if (seller == null) {
                             closeProgram();
                             JOptionPane.showMessageDialog(null, "Error!", "Error! Login taken! Try again later."
@@ -151,10 +183,116 @@ public class MessagingApp extends JComponent implements Runnable {
                     } catch (Exception y) {
                         y.printStackTrace();
                     }
+                    messagesWith = new JLabel("Select Customer to Message:");
+                    messagesWith.setBounds(10, 0, 180, 20);
+                    newMessagesOption = new JLabel("Start Conversation with Customer: ");
+                    newMessagesOption.setBounds(10, 70, 180, 20);
                 }
+                messagingPanel.add(messagesWith);
+                setupListOfMessages(listOfUsers);
+                messagingPanel.add(newMessagesOption);
+                setupNewMessageOption(newChatOptions);
             }
             if (actionCommand.equalsIgnoreCase("Logout")) {
                 closeProgram();
+            }
+            if (e.getSource().equals(messageList)) {
+                if (messageList.getSelectedItem() != null) {
+                    String line = ((String) messageList.getSelectedItem()).split(",")[0];
+                    if (isCustomer) {
+                        if (!line.equalsIgnoreCase("No messages with sellers")) {
+                            setupSendingFeature();
+                            sendMessageTo = line;
+                            startingNew = false;
+                            writer.println("Load Messages:" + line);
+                            writer.flush();
+                            try {
+                                String messageLog = (String) ois.readObject();
+                                messagesPane.setText(messageLog);
+                            } catch (Exception y) {
+                                y.printStackTrace();
+                            }
+                        }
+                    } else {
+                        if (!line.equalsIgnoreCase("No messages with customers")) {
+                            setupSendingFeature();
+                            sendMessageTo = line;
+                            startingNew = false;
+                            writer.println("Load Messages:" + line);
+                            writer.flush();
+                            try {
+                                String messageLog = (String) ois.readObject();
+                                messagesPane.setText(messageLog);
+                            } catch (Exception y) {
+                                y.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+            if (e.getSource().equals(newMessageList)) {
+                if (newMessageList.getSelectedItem() != null) {
+                    String line = ((String) newMessageList.getSelectedItem()).split(",")[0];
+                    messagesPane.setText("");
+                    if (isCustomer) {
+                        if (!line.equalsIgnoreCase("No new sellers to be messaged")) {
+                            startingNew = true;
+                            sendMessageTo = line;
+                            setupSendingFeature();
+                        }
+                    } else {
+                        if (!line.equalsIgnoreCase("No new customers to be messaged")) {
+                            startingNew = true;
+                            sendMessageTo = line;
+                            setupSendingFeature();
+                        }
+                    }
+                }
+            }
+            if (actionCommand.equalsIgnoreCase("Send")) {
+                String messageToSend = messageBox.getText();
+                if (startingNew) {
+                    writer.println("Start New:" + messageToSend);
+                } else writer.println("Send Message:" + messageToSend);
+                String updatedConversation = "";
+                if (isCustomer) {
+                    writer.println("Seller" + "," + sendMessageTo);
+                    writer.flush();
+                    try {
+                        updatedConversation = (String) ois.readObject();
+                        if (startingNew) {
+                            listOfUsers = (String[]) ois.readObject();
+                            newChatOptions = (String[]) ois.readObject();
+                        }
+                    } catch (Exception y) {
+                        y.printStackTrace();
+                    }
+                } else {
+                    writer.println("Customer" + "," + sendMessageTo);
+                    writer.flush();
+                    try {
+                        updatedConversation = (String) ois.readObject();
+                        if (startingNew) {
+                            listOfUsers = (String[]) ois.readObject();
+                            newChatOptions = (String[]) ois.readObject();
+                        }
+                    } catch (Exception y) {
+                        y.printStackTrace();
+                    }
+                }
+                messagesPane.setText(updatedConversation);
+                if (startingNew) {
+                    messageList.removeAllItems();
+                    for (int y = 0; y < listOfUsers.length; y++)
+                        messageList.addItem(listOfUsers[y]);
+                    //newMessageList.setVisible(false);
+                    newMessageList.removeAllItems();
+                    for (int y = 0; y < newChatOptions.length; y++)
+                        newMessageList.addItem(newChatOptions[y]);
+                    messagingPanel.add(newMessageList);
+                    messageList.setSelectedItem(messageList.getItemAt(listOfUsers.length - 1));
+                    startingNew = false;
+                }
             }
         }
     };
@@ -164,23 +302,27 @@ public class MessagingApp extends JComponent implements Runnable {
         isCustomer = false;
         isSeller = false;
         welcomeScreen = new JPanel();
-        welcomeScreen.setBounds(0, 0, 720, 576);
+        welcomeScreen.setBounds(0, 0, 720, 590);
         welcomeScreen.setLayout(null);
         sellerLogin = new JPanel();
-        sellerLogin.setBounds(0, 0, 720, 576);
+        sellerLogin.setBounds(0, 0, 720, 590);
         sellerLogin.setLayout(null);
         customerLogin = new JPanel();
-        customerLogin.setBounds(0, 0, 720, 576);
+        customerLogin.setBounds(0, 0, 720, 590);
         customerLogin.setLayout(null);
         customerNewAccount = new JPanel();
-        customerNewAccount.setBounds(0, 0, 720, 576);
+        customerNewAccount.setBounds(0, 0, 720, 590);
         customerNewAccount.setLayout(null);
         sellerNewAccount = new JPanel();
-        sellerNewAccount.setBounds(0, 0, 720, 576);
+        sellerNewAccount.setBounds(0, 0, 720, 590);
         sellerNewAccount.setLayout(null);
         messagingPanel = new JPanel();
-        messagingPanel.setBounds(0, 0, 576, 720);
+        messagingPanel.setBounds(0, 0, 590, 720);
         messagingPanel.setLayout(null);
+        messagingLog = new JPanel();
+        messagingLog.setLayout(null);
+        messagingLog.setBounds(250, 0, 520, 590);
+        messagingLog.setBackground(Color.WHITE);
         frame = new JFrame("Messaging App");
         username = new JTextArea("Username");
         password = new JTextArea("Password");
@@ -193,6 +335,10 @@ public class MessagingApp extends JComponent implements Runnable {
         sNewPassword = new JTextArea("Password");
         sNewEmail = new JTextArea("Email");
         sNewStore = new JTextArea("Store Name");
+        messageBox = new JTextArea("Type a message to send.");
+        messageBox.setBackground(Color.GRAY);
+        messageBox.setBounds(10, 505, 350, 25);
+        startingNew = false;
     }
 
 
@@ -214,7 +360,7 @@ public class MessagingApp extends JComponent implements Runnable {
         //messagingApp = new MessagingApp();
         //content.add(messagingApp, BorderLayout.CENTER);
 
-        frame.setSize(720, 576);
+        frame.setSize(720, 590);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
@@ -230,7 +376,7 @@ public class MessagingApp extends JComponent implements Runnable {
         customerButton.setBounds(280, 220, 150, 50);
         sellerButton.setBounds(280, 290, 150, 50);
 
-        //welcomeScreen.setBounds(0,0,720,576);
+        //welcomeScreen.setBounds(0,0,720,590);
         //welcomeScreen.add(welcomeText);
         welcomeScreen.add(welcomeText);
         welcomeScreen.add(customerButton);
@@ -314,15 +460,21 @@ public class MessagingApp extends JComponent implements Runnable {
         sellerNewAccount.add(sCreate);
 
         JButton logout = new JButton("Logout");
-        logout.setBounds(10, 496, 180, 30);
+        logout.setBounds(10, 501, 230, 30);
         buttonActivation(logout);
         messagingPanel.add(logout);
-        JPanel messagingLog = new JPanel();
-        messagingLog.setBounds(200, 0, 570, 576);
-        messagingLog.setBackground(Color.WHITE);
         messagingPanel.add(messagingLog);
 
-
+        messagesPane = new JTextPane();
+        messagesPane.setEditable(false);
+        messagesPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        JScrollPane scrollPane = new JScrollPane(messagesPane);
+        messagingLog.add(messagesPane);
+        messagingLog.add(scrollPane);
+        messagesPane.setBounds(0, 0, 445, 476);
+        scrollPane.setBounds(445, 0, 10, 476);
+        messagingLog.add(messageBox);
+        messageBox.setVisible(false);
     }
 
     public void establishConnection() throws UnknownHostException, IOException, ClassNotFoundException {
@@ -360,16 +512,33 @@ public class MessagingApp extends JComponent implements Runnable {
         b.addActionListener(actionListener);
     }
 
-    public void setupListOfMessages() {
-        String[] userMessages;
-        if (isCustomer)
-            userMessages = customer.getMessagedSellers();
-        else
-            userMessages = seller.getMessagedCustomers();
-        //account for no users
-        JComboBox<String> messageList = new JComboBox<String>(userMessages);
+    public void setupListOfMessages(String[] listOfUsers) {
+        messageList = new JComboBox<String>(listOfUsers);
         messageList.addActionListener(actionListener);
-        messageList.setBounds(10, 30, 180, 25);
+        messageList.setBounds(10, 30, 230, 25);
         messagingPanel.add(messageList);
+    }
+
+    public void setupNewMessageOption(String[] listOfUsers) {
+        newMessageList = new JComboBox<String>(listOfUsers);
+        newMessageList.addActionListener(actionListener);
+        newMessageList.setBounds(10, 100, 230, 25);
+        messagingPanel.add(newMessageList);
+    }
+
+    public void setupSendingFeature() {
+        messageBox.setVisible(true);
+        JButton sendButton = new JButton("Send");
+        buttonActivation(sendButton);
+        sendButton.setBounds(370, 480, 80, 20);
+        messagingLog.add(sendButton);
+        JButton editButton = new JButton("Edit");
+        buttonActivation(editButton);
+        messagingLog.add(editButton);
+        editButton.setBounds(370, 505, 80, 20);
+        JButton deleteButton = new JButton("Delete");
+        buttonActivation(deleteButton);
+        messagingLog.add(deleteButton);
+        deleteButton.setBounds(370, 530, 80, 20);
     }
 }
