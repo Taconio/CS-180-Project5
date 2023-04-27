@@ -4,6 +4,8 @@ import java.awt.event.*;
 import java.util.*;
 import java.net.*;
 import java.io.*;
+import java.time.*;
+import java.time.format.*;
 
 /**
  * Group project for project 5
@@ -22,6 +24,8 @@ public class MessagingServer {
     private ArrayList<Seller> sellers;
     private ArrayList<Seller> blockedSellers;
     private ArrayList<Customer> blockedCustomers;
+    private ArrayList<Seller> unmessagedSellers;
+    private ArrayList<Customer> unmessagedCustomers;
     private Scanner scanner;
 
     public MessagingServer() {
@@ -32,6 +36,8 @@ public class MessagingServer {
         sellers = new ArrayList<Seller>();
         blockedSellers = new ArrayList<Seller>();
         blockedCustomers = new ArrayList<Customer>();
+        unmessagedCustomers = new ArrayList<Customer>();
+        unmessagedSellers = new ArrayList<Seller>();
         scanner = new Scanner(System.in);
         customer = null;
         seller = null;
@@ -62,7 +68,11 @@ public class MessagingServer {
                 if (successful == false) {
                     Customer x = null;
                 }
+                String[] messagesWith = getListOfMessagesWithSellers();
+                String[] newMessagesList = getListOfNewConversationsWithSellers();
                 oos.writeObject(customer);
+                oos.writeObject(messagesWith);
+                oos.writeObject(newMessagesList);
                 oos.flush();
             }
             if (action.equalsIgnoreCase("Login Seller")) {
@@ -71,7 +81,11 @@ public class MessagingServer {
                 if (successful == false) {
                     Seller x = null;
                 }
+                String[] messagesWith = getListOfMessagesWithCustomers();
+                String[] newMessagesList = getListOfNewConversationsWithCustomers();
                 oos.writeObject(seller);
+                oos.writeObject(messagesWith);
+                oos.writeObject(newMessagesList);
                 oos.flush();
             }
             if (action.equalsIgnoreCase("Create Customer")) {
@@ -80,7 +94,11 @@ public class MessagingServer {
                 if (successful == false) {
                     Customer x = null;
                 }
+                String[] messagesWith = getListOfMessagesWithSellers();
+                String[] newMessagesList = getListOfNewConversationsWithSellers();
                 oos.writeObject(customer);
+                oos.writeObject(messagesWith);
+                oos.writeObject(newMessagesList);
                 oos.flush();
             }
             if (action.equalsIgnoreCase("Create Seller")) {
@@ -89,7 +107,11 @@ public class MessagingServer {
                 if (successful == false) {
                     Seller x = null;
                 }
+                String[] messagesWith = getListOfMessagesWithCustomers();
+                String[] newMessagesList = getListOfNewConversationsWithCustomers();
                 oos.writeObject(seller);
+                oos.writeObject(messagesWith);
+                oos.writeObject(newMessagesList);
                 oos.flush();
             }
             if (action.equalsIgnoreCase("Logout")) {
@@ -98,6 +120,71 @@ public class MessagingServer {
                 else if (seller != null && currentUser != null)
                     seller.updateInfo();
                 break;
+            }
+            if (action.equalsIgnoreCase("Load Messages")) {
+                String messageUser = line.substring(line.indexOf(":") + 1);
+                String messageLog = getMessageLog(messageUser);
+                oos.writeObject(messageLog);
+                oos.flush();
+            }
+            if (action.equalsIgnoreCase("Send Message")) {
+                String message = formatMessage(line.substring(line.indexOf(":") + 1));
+                String info = reader.readLine();
+                String keyUser = info.split(",")[0];
+                String otherUser = info.split(",")[1];
+                messages.get(otherUser).add(message);
+                writeConversation(keyUser, otherUser);
+                oos.writeObject(getMessageLog(otherUser));
+                oos.flush();
+            }
+            if (action.equalsIgnoreCase("Start New")) {
+                String message = formatMessage(line.substring(line.indexOf(":") + 1));
+                String info = reader.readLine();
+                ArrayList<String> lines = new ArrayList<String>();
+                lines.add(message);
+                String keyUser = info.split(",")[0];
+                String otherUser = info.split(",")[1];
+                messages.put(otherUser, lines);
+                writeConversation(keyUser, otherUser);
+                String[] messagesWith = new String[0];
+                String[] newMessagesList = new String[0];
+                if (keyUser.equalsIgnoreCase("Seller")) {
+                    if (messages.size() > 0) {
+                        Set<String> keys = messages.keySet();
+                        Iterator<String> i = keys.iterator();
+                        String[] allConversations = new String[messages.size()];
+                        for (int x = 0; x < messages.size(); x++)
+                            allConversations[x] = i.next();
+                        customer.setMessagedSellers(allConversations);
+                    }
+                    for (int x = 0; x < unmessagedSellers.size(); x++) {
+                        if (unmessagedSellers.get(x).getUsername().equals(otherUser))
+                            unmessagedSellers.remove(x);
+                    }
+                    customer.updateInfo();
+                    messagesWith = getListOfMessagesWithSellers();
+                    newMessagesList = getListOfNewConversationsWithSellers();
+                } else {
+                    if (messages.size() > 0) {
+                        Set<String> keys = messages.keySet();
+                        Iterator<String> i = keys.iterator();
+                        String[] allConversations = new String[messages.size()];
+                        for (int x = 0; x < messages.size(); x++)
+                            allConversations[x] = i.next();
+                        seller.setMessagedCustomers(allConversations);
+                    }
+                    for (int x = 0; x < unmessagedCustomers.size(); x++) {
+                        if (unmessagedCustomers.get(x).getUsername().equals(otherUser))
+                            unmessagedCustomers.remove(x);
+                    }
+                    seller.updateInfo();
+                    messagesWith = getListOfMessagesWithCustomers();
+                    newMessagesList = getListOfNewConversationsWithCustomers();
+                }
+                oos.writeObject(getMessageLog(otherUser));
+                oos.writeObject(messagesWith);
+                oos.writeObject(newMessagesList);
+                oos.flush();
             }
         }
         oos.close();
@@ -118,6 +205,7 @@ public class MessagingServer {
         if (f.exists())
             readUsers("Seller");
         else {
+
             try {
                 f.createNewFile();
             } catch (Exception e) {
@@ -139,7 +227,7 @@ public class MessagingServer {
         currentUser = u;
         String password = p;
         String email = em;
-        String storeName = st;
+        String[] storeName = {st};
         File f = new File("UserInfo.txt");
         if (f.exists())
             readUsers("Customer");
@@ -201,7 +289,7 @@ public class MessagingServer {
             String user = sellers.get(i).getUsername();
             String pass = sellers.get(i).getPassword();
             String mail = sellers.get(i).getEmail();
-            String store = sellers.get(i).getStoreName();
+            String[] store = sellers.get(i).getStoreName();
             if (username.equals(user) && pass.equals(password)) {
                 loggedIn = true;
                 seller = new Seller(currentUser, password, mail, store);
@@ -250,15 +338,31 @@ public class MessagingServer {
 
                 String[] userInfo = line.split(","); // splits the line to read type of user
 
-                if (userInfo[3].equals("Seller") && !blockedList.contains(currentUser))
-                    sellers.add(new Seller(userInfo[0], userInfo[1], userInfo[2], userInfo[4], userMessages,
+                if (userInfo[3].equals("Seller") && !blockedList.contains(currentUser)) {
+                    //Reads all stores present in userInfo file
+                    ArrayList<String> stores = new ArrayList<>();
+                    for (int i = 0; i < userInfo.length - 4; i++) {
+                        stores.add(userInfo[i + 4]);
+                    }
+                    sellers.add(new Seller(userInfo[0], userInfo[1], userInfo[2], stores.toArray(new String[0]), userMessages,
                             blockedUsers));
-                else if (userInfo[3].equals("Customer") && !blockedList.contains(currentUser))
+                    if (!messageList.contains(currentUser) && userInfo[3].equalsIgnoreCase(keyUser))
+                        unmessagedSellers.add(new Seller(userInfo[0],
+                                userInfo[1], userInfo[2], stores.toArray(new String[0]), userMessages, blockedUsers));
+                } else if (userInfo[3].equals("Customer") && !blockedList.contains(currentUser)) {
                     customers.add(new Customer(userInfo[0], userInfo[1], userInfo[2], userMessages, blockedUsers));
-                else if (userInfo[3].equals("Seller") && blockedList.contains(currentUser))
-                    blockedSellers.add(new Seller(userInfo[0], userInfo[1], userInfo[2], userInfo[4], userMessages,
+                    if (!messageList.contains(currentUser) && userInfo[3].equalsIgnoreCase(keyUser))
+                        unmessagedCustomers.add(new Customer(userInfo[0],
+                                userInfo[1], userInfo[2], userMessages, blockedUsers));
+                } else if (userInfo[3].equals("Seller") && blockedList.contains(currentUser)) {
+                    //Reads all stores present in userInfo file
+                    ArrayList<String> stores = new ArrayList<>();
+                    for (int i = 0; i < userInfo.length - 4; i++) {
+                        stores.add(userInfo[i + 4]);
+                    }
+                    blockedSellers.add(new Seller(userInfo[0], userInfo[1], userInfo[2], stores.toArray(new String[0]), userMessages,
                             blockedUsers));
-                else if (userInfo[3].equals("Customer") && blockedList.contains(currentUser))
+                } else if (userInfo[3].equals("Customer") && blockedList.contains(currentUser))
                     blockedCustomers.add(new Customer(userInfo[0], userInfo[1], userInfo[2], userMessages,
                             blockedUsers));
 
@@ -298,5 +402,145 @@ public class MessagingServer {
             e.printStackTrace();
         }
         messages.put(otherUser, conversation);
+    }
+
+    public String[] findSellerStore(String name) {
+        for (int i = 0; i < sellers.size(); i++)
+            if (sellers.get(i).getUsername().equals(name))
+                return sellers.get(i).getStoreName();
+        return null;
+    }
+
+    public String[] getListOfMessagesWithSellers() {
+        String[] listOfMessages;
+        if (messages.size() != 0) {
+            listOfMessages = new String[messages.size()];
+            String[] userMessages = customer.getMessagedSellers();
+            for (int i = 0; i < messages.size(); i++) {
+                listOfMessages[i] = userMessages[i] + ", Stores: " + Arrays.toString(findSellerStore(userMessages[i]));
+            }
+        } else {
+            listOfMessages = new String[1];
+            listOfMessages[0] = "No messages with sellers";
+        }
+        return listOfMessages;
+    }
+
+    public String[] getListOfMessagesWithCustomers() {
+        String[] listOfMessages;
+        if (messages.size() != 0) {
+            listOfMessages = new String[messages.size()];
+            String[] userMessages = seller.getMessagedCustomers();
+            for (int i = 0; i < messages.size(); i++) {
+                listOfMessages[i] = userMessages[i];
+            }
+        } else {
+            listOfMessages = new String[1];
+            listOfMessages[0] = "No messages with customers";
+        }
+        return listOfMessages;
+    }
+
+    public String[] getListOfNewConversationsWithCustomers() {
+        String[] listOfMessages;
+        if (unmessagedCustomers.size() != 0) {
+            listOfMessages = new String[unmessagedCustomers.size()];
+            for (int i = 0; i < unmessagedCustomers.size(); i++) {
+                listOfMessages[i] = unmessagedCustomers.get(i).getUsername();
+            }
+        } else {
+            listOfMessages = new String[1];
+            listOfMessages[0] = "No new Customers to be messaged";
+        }
+        return listOfMessages;
+    }
+
+    public String[] getListOfNewConversationsWithSellers() {
+        String[] listOfMessages;
+        if (unmessagedSellers.size() != 0) {
+            listOfMessages = new String[unmessagedSellers.size()];
+            for (int i = 0; i < unmessagedSellers.size(); i++) {
+                listOfMessages[i] = unmessagedSellers.get(i).getUsername() + ", Store: " +
+                        Arrays.toString(unmessagedSellers.get(i).getStoreName());
+            }
+        } else {
+            listOfMessages = new String[1];
+            listOfMessages[0] = "No new Sellers to be messaged";
+        }
+        return listOfMessages;
+    }
+
+    public void writeConversation(String keyUser, String otherUser) {
+        String fileName;
+        if (keyUser.equals("Seller"))
+            fileName = currentUser + "&" + otherUser + ".txt";
+        else
+            fileName = otherUser + "&" + currentUser + ".txt";
+        File f = new File(fileName);
+        try {
+            FileOutputStream fos = new FileOutputStream(f);
+            PrintWriter pw = new PrintWriter(fos);
+            if (!messages.get(otherUser).get(0).contains("&Seller"))
+                pw.println("Participants (Customer&Seller) : " + fileName);
+            for (int i = 0; i < messages.get(otherUser).size(); i++)
+                pw.println(messages.get(otherUser).get(i));
+            pw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // export to CVS method, should work for both user and seller
+    public void csvExport(String conversationTextFile) {
+        try {
+            String participants = conversationTextFile.substring(0, conversationTextFile.length() - 4);
+
+
+            BufferedReader bfr = new BufferedReader(new FileReader(conversationTextFile));
+            File filecsv = new File(participants + ".csv");
+            BufferedWriter bfw = new BufferedWriter(new FileWriter(filecsv));
+
+            //Reading twice here because we have to skip first line of the conversation
+            String line = bfr.readLine();
+            line = bfr.readLine();
+            bfw.write("Customer&Seller,Timestamp,Sender,Contents\n");
+            while (line != null) {
+                //Constants used to build CSV line, array used specifically to get timestamp
+                String[] lineArr = line.split(" ");
+                String content = line.substring(line.indexOf(":", 20) + 2);
+                String sender = lineArr[3].substring(lineArr[3].indexOf(",") + 1, lineArr[3].indexOf(":"));
+
+                //Final string that is going to be written to CSV file
+                String temp = String.format("%s,%s,%s,\"%s\"\n", participants, lineArr[2], sender, content);
+                bfw.write(temp);
+
+                line = bfr.readLine();
+            }
+
+            //If everything worked succesfully close reader and writer objects and print to terminal.
+            bfw.close();
+            bfr.close();
+            System.out.println("Conversation succesfully exported!");
+
+        } catch (IOException e) {
+            System.out.println("Error reading file!");
+            e.printStackTrace();
+        }
+    }
+
+    public String getMessageLog(String messageUser) {
+        String messageLog = "";
+        for (int i = 0; i < messages.get(messageUser).size(); i++)
+            messageLog = messageLog + messages.get(messageUser).get(i) + "\n";
+        return messageLog;
+    }
+
+    public String formatMessage(String line) {
+        DateTimeFormatter globalFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy 'at' hh:mma z");
+        ZonedDateTime currentISTime = ZonedDateTime.now();
+        ZonedDateTime currentETime =
+                currentISTime.withZoneSameInstant(ZoneId.of("America/New_York"));
+        String timeStamp = globalFormat.format(currentETime);
+        return timeStamp + "," + currentUser + ": " + line;
     }
 }
