@@ -8,7 +8,7 @@ import java.io.*;
  * @version 04-10-2023
  */
 
-public class Customer {
+public class Customer implements Serializable {
     private String username;
     private String password;
     private String email;
