@@ -27,6 +27,8 @@ public class MessagingApp extends JComponent implements Runnable {
     private JPanel messagingLog;
     private String currentUser;
     private JButton exportToCsv;
+    private JButton cStatisticsReceived;
+    private JButton cStatisticsSent;
     private JTextArea username;
     private JTextArea sUsername;
     private JTextArea password;
@@ -55,6 +57,7 @@ public class MessagingApp extends JComponent implements Runnable {
     private JTextPane messagesPane;
     private boolean startingNew;
     private String sendMessageTo;
+    private String total;
 
     /* action listener for buttons */
     ActionListener actionListener = new ActionListener() {
@@ -74,8 +77,11 @@ public class MessagingApp extends JComponent implements Runnable {
                 String pw;
                 JLabel messagesWith;
                 JLabel newMessagesOption;
+                JLabel statsDashboard;
                 exportToCsv.setVisible(false);
                 if (isCustomer) {
+                    cStatisticsReceived.setVisible(true);
+                    cStatisticsSent.setVisible(true);
                     currentUser = username.getText();
                     pw = password.getText();
                     writer.println("Login Customer:" + currentUser + "," + pw);
@@ -98,6 +104,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     messagesWith.setBounds(10, 0, 180, 20);
                     newMessagesOption = new JLabel("Start Conversation with Seller: ");
                     newMessagesOption.setBounds(10, 70, 180, 20);
+                    statsDashboard = new JLabel("View conversation statistics:");
+                    statsDashboard.setBounds(10, 140, 180, 20);
                 } else {
                     currentUser = sUsername.getText();
                     pw = sPassword.getText();
@@ -121,6 +129,9 @@ public class MessagingApp extends JComponent implements Runnable {
                     messagesWith.setBounds(10, 0, 180, 20);
                     newMessagesOption = new JLabel("Start Conversation with Customer: ");
                     newMessagesOption.setBounds(10, 70, 180, 20);
+                    statsDashboard = new JLabel("View conversation statistics:");
+                    statsDashboard.setBounds(10, 140, 180, 20);
+
                     JButton addStore = new JButton("Add Store");
                     addStore.setBounds(10, 421, 230, 30);
                     buttonActivation(addStore);
@@ -130,6 +141,7 @@ public class MessagingApp extends JComponent implements Runnable {
                 setupListOfMessages(listOfUsers);
                 messagingPanel.add(newMessagesOption);
                 setupNewMessageOption(newChatOptions);
+                messagingPanel.add(statsDashboard);
             }
             if (actionCommand.equalsIgnoreCase("Create New Account")) {
                 if (isCustomer) {
@@ -143,7 +155,11 @@ public class MessagingApp extends JComponent implements Runnable {
                 String email;
                 JLabel messagesWith;
                 JLabel newMessagesOption;
+                JLabel statsDashboard;
                 exportToCsv.setVisible(false);
+                cStatisticsReceived.setVisible(true);
+                cStatisticsSent.setVisible(true);
+
                 if (isCustomer) {
                     currentUser = newUsername.getText();
                     pw = newPassword.getText();
@@ -168,6 +184,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     messagesWith.setBounds(10, 0, 180, 20);
                     newMessagesOption = new JLabel("Start Conversation with Seller: ");
                     newMessagesOption.setBounds(10, 70, 180, 20);
+                    statsDashboard = new JLabel("View conversation statistics:");
+                    statsDashboard.setBounds(10, 140, 180, 20);
                 } else {
                     currentUser = sNewUsername.getText();
                     pw = sNewPassword.getText();
@@ -193,6 +211,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     messagesWith.setBounds(10, 0, 180, 20);
                     newMessagesOption = new JLabel("Start Conversation with Customer: ");
                     newMessagesOption.setBounds(10, 70, 180, 20);
+                    statsDashboard = new JLabel("View conversation statistics:");
+                    statsDashboard.setBounds(10, 140, 180, 20);
                     JButton addStore = new JButton("Add Store");
                     addStore.setBounds(10, 421, 230, 30);
                     buttonActivation(addStore);
@@ -202,6 +222,7 @@ public class MessagingApp extends JComponent implements Runnable {
                 setupListOfMessages(listOfUsers);
                 messagingPanel.add(newMessagesOption);
                 setupNewMessageOption(newChatOptions);
+                messagingPanel.add(statsDashboard);
             }
             if (actionCommand.equalsIgnoreCase("Logout")) {
                 closeProgram();
@@ -210,9 +231,17 @@ public class MessagingApp extends JComponent implements Runnable {
                 if (messageList.getSelectedItem() != null) {
                     String line = ((String) messageList.getSelectedItem()).split(",")[0];
                     exportToCsv.setVisible(true);
+
+
                     if (isCustomer) {
+                        cStatisticsReceived.setVisible(true);
+                        cStatisticsSent.setVisible(true);
+
                         if (!line.equalsIgnoreCase("No messages with sellers")) {
                             exportToCsv.setBounds(10, 421, 230, 30);
+                            cStatisticsReceived.setBounds(10, 170, 230, 30);
+                            cStatisticsSent.setBounds(10,207,230,30);
+
                             setupSendingFeature();
                             sendMessageTo = line;
                             startingNew = false;
@@ -245,6 +274,9 @@ public class MessagingApp extends JComponent implements Runnable {
             if (e.getSource().equals(newMessageList)) {
                 if (newMessageList.getSelectedItem() != null) {
                     exportToCsv.setVisible(false);
+                    cStatisticsReceived.setVisible(true);
+                    cStatisticsSent.setVisible(true);
+
                     String line = ((String) newMessageList.getSelectedItem()).split(",")[0];
                     messagesPane.setText("");
                     if (isCustomer) {
@@ -347,7 +379,21 @@ public class MessagingApp extends JComponent implements Runnable {
                 writer.println("Export to CSV:" + fileName);
                 writer.flush();
                 JOptionPane.showMessageDialog(null,
-                        "Exported Successfuly!", "Exported Done!", JOptionPane.PLAIN_MESSAGE);
+                        "Exported Successfully!", "Exported Done!", JOptionPane.PLAIN_MESSAGE);
+            }
+            //Statistics for customer - sorted by num messages received
+            if(actionCommand.equalsIgnoreCase("Sort Stats by Messages Received")) {
+                if (isCustomer) {
+                    writer.println("Sort Stats by Messages Received:c");
+                    writer.flush();
+                    try {
+                        total = (String) ois.readObject();
+                    } catch (IOException | ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    JOptionPane.showMessageDialog(null,
+                            total, "Statistics", JOptionPane.PLAIN_MESSAGE);
+                }
             }
         }
     };
@@ -398,8 +444,17 @@ public class MessagingApp extends JComponent implements Runnable {
         startingNew = false;
         exportToCsv = new JButton("Export to CSV");
         exportToCsv.setBounds(10, 381, 230, 30);
+        cStatisticsReceived = new JButton("Sort Stats by Messages Received");
+        cStatisticsReceived.setBounds(10, 170, 230, 30);
+        cStatisticsSent = new JButton("Sort Stats by Messages Sent");
+        cStatisticsSent.setBounds(10, 207, 230, 30);
         buttonActivation(exportToCsv);
+
         messagingPanel.add(exportToCsv);
+        buttonActivation(cStatisticsReceived);
+        messagingPanel.add(cStatisticsReceived);
+        buttonActivation(cStatisticsSent);
+        messagingPanel.add(cStatisticsSent);
     }
 
 
