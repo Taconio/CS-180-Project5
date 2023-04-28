@@ -186,6 +186,35 @@ public class MessagingServer {
                 oos.writeObject(newMessagesList);
                 oos.flush();
             }
+            if (action.equalsIgnoreCase("Change E-mail Customer")) {
+                String newEmail = line.substring(line.indexOf(":") + 1);
+                customer.setEmail(newEmail);
+                customer.updateInfo();
+                oos.writeObject(customer);
+                oos.flush();
+            }
+            if (action.equalsIgnoreCase("Change E-mail Seller")) {
+                String newEmail = line.substring(line.indexOf(":") + 1);
+                seller.setEmail(newEmail);
+                seller.updateInfo();
+                oos.writeObject(seller);
+                oos.flush();
+            }
+            if (action.equalsIgnoreCase("Add Store")) {
+                String newStore = line.substring(line.indexOf(":") + 1);
+                String[] stores = seller.getStoreName();
+                String[] newStores = new String[stores.length + 1];
+                for (int x = 0; x < stores.length; x++)
+                    newStores[x] = stores[x];
+                newStores[newStores.length - 1] = newStore;
+                seller.setStoreName(newStores);
+                seller.updateInfo();
+                oos.writeObject(seller);
+                oos.flush();
+            }
+            if (action.equalsIgnoreCase("Export to CSV")) {
+                csvExport(line.substring(line.indexOf(":") + 1));
+            }
         }
         oos.close();
         ois.close();
@@ -520,8 +549,6 @@ public class MessagingServer {
             //If everything worked succesfully close reader and writer objects and print to terminal.
             bfw.close();
             bfr.close();
-            System.out.println("Conversation succesfully exported!");
-
         } catch (IOException e) {
             System.out.println("Error reading file!");
             e.printStackTrace();
