@@ -58,6 +58,7 @@ public class MessagingApp extends JComponent implements Runnable {
     private boolean startingNew;
     private String sendMessageTo;
     private String total;
+    private String cSentStats;
 
     /* action listener for buttons */
     ActionListener actionListener = new ActionListener() {
@@ -395,6 +396,19 @@ public class MessagingApp extends JComponent implements Runnable {
                     }
                     JOptionPane.showMessageDialog(null,
                             total, "Statistics", JOptionPane.PLAIN_MESSAGE);
+                }
+            }
+            if (actionCommand.equalsIgnoreCase("Sort Stats by Messages Sent")) {
+                if (isCustomer) {
+                    writer.println("Sort Stats by Messages Sent: ");
+                    writer.flush();
+                    try {
+                        cSentStats = (String) ois.readObject();
+                    } catch (IOException | ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    JOptionPane.showMessageDialog(null,
+                            cSentStats, "Statistics", JOptionPane.PLAIN_MESSAGE);
                 }
             }
         }
