@@ -107,6 +107,8 @@ public class MessagingApp extends JComponent implements Runnable {
                     statsDashboard = new JLabel("View conversation statistics:");
                     statsDashboard.setBounds(10, 140, 180, 20);
                 } else {
+                    cStatisticsSent.setVisible(false);
+                    cStatisticsReceived.setVisible(false);
                     currentUser = sUsername.getText();
                     pw = sPassword.getText();
                     writer.println("Login Seller:" + currentUser + "," + pw);
