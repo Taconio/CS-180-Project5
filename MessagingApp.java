@@ -243,7 +243,7 @@ public class MessagingApp extends JComponent implements Runnable {
                         if (!line.equalsIgnoreCase("No messages with sellers")) {
                             exportToCsv.setBounds(10, 421, 230, 30);
                             cStatisticsReceived.setBounds(10, 170, 230, 30);
-                            cStatisticsSent.setBounds(10,207,230,30);
+                            cStatisticsSent.setBounds(10, 207, 230, 30);
 
                             setupSendingFeature();
                             sendMessageTo = line;
@@ -342,41 +342,41 @@ public class MessagingApp extends JComponent implements Runnable {
                     startingNew = false;
                 }
             }
-            if(actionCommand.equalsIgnoreCase("Change E-mail")){
+            if (actionCommand.equalsIgnoreCase("Change E-mail")) {
                 String newEmail = JOptionPane.showInputDialog(null,
                         "Enter new email:", "Change Email", JOptionPane.QUESTION_MESSAGE);
-                if(isCustomer){
+                if (isCustomer) {
                     writer.println("Change E-mail Customer:" + newEmail);
                     writer.flush();
-                    try{
+                    try {
                         customer = (Customer) ois.readObject();
-                    }catch(Exception y){
+                    } catch (Exception y) {
                         y.printStackTrace();
                     }
-                }else{
+                } else {
                     writer.println("Change E-mail Seller:" + newEmail);
                     writer.flush();
-                    try{
+                    try {
                         seller = (Seller) ois.readObject();
-                    }catch(Exception y){
+                    } catch (Exception y) {
                         y.printStackTrace();
                     }
                 }
             }
-            if(actionCommand.equalsIgnoreCase("Add Store")){
+            if (actionCommand.equalsIgnoreCase("Add Store")) {
                 String newStore = JOptionPane.showInputDialog(null,
                         "Store name:", "Add new Store", JOptionPane.QUESTION_MESSAGE);
                 writer.println("Add Store:" + newStore);
                 writer.flush();
-                try{
+                try {
                     seller = (Seller) ois.readObject();
-                }catch(Exception y){
+                } catch (Exception y) {
                     y.printStackTrace();
                 }
             }
-            if(actionCommand.equalsIgnoreCase("Export to CSV")){
+            if (actionCommand.equalsIgnoreCase("Export to CSV")) {
                 String fileName = "";
-                if(isCustomer)
+                if (isCustomer)
                     fileName = currentUser + "&" + sendMessageTo + ".txt";
                 else fileName = sendMessageTo + "&" + currentUser + ".txt";
                 writer.println("Export to CSV:" + fileName);
@@ -385,7 +385,7 @@ public class MessagingApp extends JComponent implements Runnable {
                         "Exported Successfully!", "Exported Done!", JOptionPane.PLAIN_MESSAGE);
             }
             //Statistics for customer - sorted by num messages received
-            if(actionCommand.equalsIgnoreCase("Sort Stats by Messages Received")) {
+            if (actionCommand.equalsIgnoreCase("Sort Stats by Messages Received")) {
                 if (isCustomer) {
                     writer.println("Sort Stats by Messages Received:c");
                     writer.flush();
@@ -409,6 +409,68 @@ public class MessagingApp extends JComponent implements Runnable {
                     }
                     JOptionPane.showMessageDialog(null,
                             cSentStats, "Statistics", JOptionPane.PLAIN_MESSAGE);
+                }
+            }
+            if (actionCommand.equalsIgnoreCase("Edit")) {
+                boolean successful = false;
+                do {
+                    String lineToEdit = JOptionPane.showInputDialog(null,
+                            "Enter message to edit:", "Edit message", JOptionPane.QUESTION_MESSAGE);
+                    String newEditedLine = JOptionPane.showInputDialog(null,
+                            "Enter new message:", "Edit message", JOptionPane.QUESTION_MESSAGE);
+                    writer.println("Edit Message:" + lineToEdit + "," + newEditedLine);
+                    writer.println(sendMessageTo);
+                    if (isCustomer)
+                        writer.println("Seller");
+                    else
+                        writer.println("Customer");
+                    writer.flush();
+                    try {
+                        successful = Boolean.parseBoolean(reader.readLine());
+                    } catch (Exception y) {
+                        y.printStackTrace();
+                    }
+                    if (!successful)
+                        JOptionPane.showMessageDialog(null,
+                                "Message can't be edited!", "Error!", JOptionPane.PLAIN_MESSAGE);
+                } while (!successful);
+                JOptionPane.showMessageDialog(null,
+                        "Message Edited!", "Edited!", JOptionPane.PLAIN_MESSAGE);
+                try {
+                    String messages = (String) ois.readObject();
+                    messagesPane.setText(messages);
+                } catch (Exception y) {
+                    y.printStackTrace();
+                }
+            }
+            if (actionCommand.equalsIgnoreCase("Delete")) {
+                boolean successful = false;
+                do {
+                    String lineToDelete = JOptionPane.showInputDialog(null,
+                            "Enter message to delete:", "Delete message", JOptionPane.QUESTION_MESSAGE);
+                    writer.println("Delete Message:" + lineToDelete);
+                    writer.println(sendMessageTo);
+                    if (isCustomer)
+                        writer.println("Seller");
+                    else
+                        writer.println("Customer");
+                    writer.flush();
+                    try {
+                        successful = Boolean.parseBoolean(reader.readLine());
+                    } catch (Exception y) {
+                        y.printStackTrace();
+                    }
+                    if (!successful)
+                        JOptionPane.showMessageDialog(null,
+                                "Message can't be Deleted!", "Error!", JOptionPane.PLAIN_MESSAGE);
+                } while (!successful);
+                JOptionPane.showMessageDialog(null,
+                        "Message Deleted!", "Deleted!", JOptionPane.PLAIN_MESSAGE);
+                try {
+                    String messages = (String) ois.readObject();
+                    messagesPane.setText(messages);
+                } catch (Exception y) {
+                    y.printStackTrace();
                 }
             }
         }
