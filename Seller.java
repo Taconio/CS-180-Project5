@@ -87,9 +87,13 @@ public class Seller implements Serializable {
         this.blockedCustomers = blockedCustomers;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     /*
-            Reads all the information from update info, adds users name to other users conversation lists
-         */
+                Reads all the information from update info, adds users name to other users conversation lists
+             */
     public void updateInfo() {
         File f = new File("UserInfo.txt");
         ArrayList<String> newLines = new ArrayList<String>();
