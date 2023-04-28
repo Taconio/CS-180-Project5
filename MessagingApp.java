@@ -26,7 +26,7 @@ public class MessagingApp extends JComponent implements Runnable {
     private JPanel messagingPanel;
     private JPanel messagingLog;
     private String currentUser;
-
+    private JButton exportToCsv;
     private JTextArea username;
     private JTextArea sUsername;
     private JTextArea password;
@@ -74,6 +74,7 @@ public class MessagingApp extends JComponent implements Runnable {
                 String pw;
                 JLabel messagesWith;
                 JLabel newMessagesOption;
+                exportToCsv.setVisible(false);
                 if (isCustomer) {
                     currentUser = username.getText();
                     pw = password.getText();
@@ -120,6 +121,10 @@ public class MessagingApp extends JComponent implements Runnable {
                     messagesWith.setBounds(10, 0, 180, 20);
                     newMessagesOption = new JLabel("Start Conversation with Customer: ");
                     newMessagesOption.setBounds(10, 70, 180, 20);
+                    JButton addStore = new JButton("Add Store");
+                    addStore.setBounds(10, 421, 230, 30);
+                    buttonActivation(addStore);
+                    messagingPanel.add(addStore);
                 }
                 messagingPanel.add(messagesWith);
                 setupListOfMessages(listOfUsers);
@@ -138,6 +143,7 @@ public class MessagingApp extends JComponent implements Runnable {
                 String email;
                 JLabel messagesWith;
                 JLabel newMessagesOption;
+                exportToCsv.setVisible(false);
                 if (isCustomer) {
                     currentUser = newUsername.getText();
                     pw = newPassword.getText();
@@ -187,6 +193,10 @@ public class MessagingApp extends JComponent implements Runnable {
                     messagesWith.setBounds(10, 0, 180, 20);
                     newMessagesOption = new JLabel("Start Conversation with Customer: ");
                     newMessagesOption.setBounds(10, 70, 180, 20);
+                    JButton addStore = new JButton("Add Store");
+                    addStore.setBounds(10, 421, 230, 30);
+                    buttonActivation(addStore);
+                    messagingPanel.add(addStore);
                 }
                 messagingPanel.add(messagesWith);
                 setupListOfMessages(listOfUsers);
@@ -199,8 +209,10 @@ public class MessagingApp extends JComponent implements Runnable {
             if (e.getSource().equals(messageList)) {
                 if (messageList.getSelectedItem() != null) {
                     String line = ((String) messageList.getSelectedItem()).split(",")[0];
+                    exportToCsv.setVisible(true);
                     if (isCustomer) {
                         if (!line.equalsIgnoreCase("No messages with sellers")) {
+                            exportToCsv.setBounds(10, 421, 230, 30);
                             setupSendingFeature();
                             sendMessageTo = line;
                             startingNew = false;
@@ -232,6 +244,7 @@ public class MessagingApp extends JComponent implements Runnable {
             }
             if (e.getSource().equals(newMessageList)) {
                 if (newMessageList.getSelectedItem() != null) {
+                    exportToCsv.setVisible(false);
                     String line = ((String) newMessageList.getSelectedItem()).split(",")[0];
                     messagesPane.setText("");
                     if (isCustomer) {
@@ -294,6 +307,48 @@ public class MessagingApp extends JComponent implements Runnable {
                     startingNew = false;
                 }
             }
+            if(actionCommand.equalsIgnoreCase("Change E-mail")){
+                String newEmail = JOptionPane.showInputDialog(null,
+                        "Enter new email:", "Change Email", JOptionPane.QUESTION_MESSAGE);
+                if(isCustomer){
+                    writer.println("Change E-mail Customer:" + newEmail);
+                    writer.flush();
+                    try{
+                        customer = (Customer) ois.readObject();
+                    }catch(Exception y){
+                        y.printStackTrace();
+                    }
+                }else{
+                    writer.println("Change E-mail Seller:" + newEmail);
+                    writer.flush();
+                    try{
+                        seller = (Seller) ois.readObject();
+                    }catch(Exception y){
+                        y.printStackTrace();
+                    }
+                }
+            }
+            if(actionCommand.equalsIgnoreCase("Add Store")){
+                String newStore = JOptionPane.showInputDialog(null,
+                        "Store name:", "Add new Store", JOptionPane.QUESTION_MESSAGE);
+                writer.println("Add Store:" + newStore);
+                writer.flush();
+                try{
+                    seller = (Seller) ois.readObject();
+                }catch(Exception y){
+                    y.printStackTrace();
+                }
+            }
+            if(actionCommand.equalsIgnoreCase("Export to CSV")){
+                String fileName = "";
+                if(isCustomer)
+                    fileName = currentUser + "&" + sendMessageTo + ".txt";
+                else fileName = sendMessageTo + "&" + currentUser + ".txt";
+                writer.println("Export to CSV:" + fileName);
+                writer.flush();
+                JOptionPane.showMessageDialog(null,
+                        "Exported Successfuly!", "Exported Done!", JOptionPane.PLAIN_MESSAGE);
+            }
         }
     };
 
@@ -336,9 +391,15 @@ public class MessagingApp extends JComponent implements Runnable {
         sNewEmail = new JTextArea("Email");
         sNewStore = new JTextArea("Store Name");
         messageBox = new JTextArea("Type a message to send.");
-        messageBox.setBackground(Color.GRAY);
+        messageBox.setBackground(Color.BLACK);
+        messageBox.setForeground(Color.WHITE);
         messageBox.setBounds(10, 505, 350, 25);
+        messageBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         startingNew = false;
+        exportToCsv = new JButton("Export to CSV");
+        exportToCsv.setBounds(10, 381, 230, 30);
+        buttonActivation(exportToCsv);
+        messagingPanel.add(exportToCsv);
     }
 
 
@@ -463,6 +524,10 @@ public class MessagingApp extends JComponent implements Runnable {
         logout.setBounds(10, 501, 230, 30);
         buttonActivation(logout);
         messagingPanel.add(logout);
+        JButton editEmail = new JButton("Change E-mail");
+        editEmail.setBounds(10, 461, 230, 30);
+        buttonActivation(editEmail);
+        messagingPanel.add(editEmail);
         messagingPanel.add(messagingLog);
 
         messagesPane = new JTextPane();
