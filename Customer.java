@@ -72,6 +72,10 @@ public class Customer implements Serializable {
         this.blockedSellers = blockedSellers;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     /*
         Reads all the information from update info, adds users name to other users conversation lists
      */
