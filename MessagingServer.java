@@ -1,11 +1,11 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.net.*;
 import java.io.*;
-import java.time.*;
-import java.time.format.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * Group project for project 5
@@ -27,6 +27,7 @@ public class MessagingServer {
     private ArrayList<Seller> unmessagedSellers;
     private ArrayList<Customer> unmessagedCustomers;
     private Scanner scanner;
+    private String totals;
 
     public MessagingServer() {
         currentUser = "";
@@ -215,13 +216,81 @@ public class MessagingServer {
             if (action.equalsIgnoreCase("Export to CSV")) {
                 csvExport(line.substring(line.indexOf(":") + 1));
             }
+            if (action.equalsIgnoreCase("Sort Stats by Messages Received")) {
+                totals = (customerStatsReceivedMessages());
+                //System.out.println(totals);
+                oos.writeObject(totals);
+                oos.flush();
+            }
         }
         oos.close();
         ois.close();
         writer.close();
         reader.close();
     }
-
+    public String customerStatsReceivedMessages() {
+        String total = null;
+        total = "Statistics Sorted by Number of Messages Received from Sellers\n" +
+                "*************************************************************\n";
+        ArrayList<String> messagesReceivedEach = new ArrayList<>();
+        String[] messagedSellersList = (customer.getMessagedSellers());
+        ArrayList<String> storeList = new ArrayList<>();
+        for (int i = 0; i < messagedSellersList.length; i++) {
+            File fi = new File("UserInfo.txt");
+            File f = new File(customer.getUsername() + "&" + messagedSellersList[i] + ".txt");
+            try {
+                FileReader fir = new FileReader(fi);
+                BufferedReader bfrUserInfo = new BufferedReader(fir);
+                String line2 = bfrUserInfo.readLine();
+                int count = 1;
+                while(line2 != null){
+                    if ((count + 2) % 3 == 0) {
+                        String[] info = line2.split(",",5);
+                        if (info[3].equals("Seller")) {
+                            if (info[0].equals(messagedSellersList[i])) {
+                                storeList.add("[" + info[4] + "]");
+                            }
+                        }
+                    }
+                    count ++;
+                    line2 = bfrUserInfo.readLine();
+                }
+                FileReader fr = new FileReader(f);
+                BufferedReader bfr = new BufferedReader(fr);
+                bfr.readLine();
+                int sent = 0;
+                int received = 0;
+                String line = bfr.readLine();
+                while (line != null) {
+                    String sender = line.substring(line.indexOf(",") + 1, line.indexOf(": "));
+                    if (!sender.equals(customer.getUsername())) {
+                        received++;
+                    }
+                    line = bfr.readLine();
+                }
+                messagesReceivedEach.add(String.valueOf(received) + "," + messagedSellersList[i]);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (int i = 0; i < messagesReceivedEach.size(); i++) {
+            messagesReceivedEach.set(i,messagesReceivedEach.get(i) + "%$%" + storeList.get(i));
+        }
+        Collections.sort(messagesReceivedEach, new Comparator<String>() {
+            public int compare(String s1, String s2) {
+                int n1 = Integer.parseInt(s1.substring(0, s1.indexOf(",")));
+                int n2 = Integer.parseInt(s2.substring(0, s2.indexOf(",")));
+                return Integer.compare(n1, n2);
+            }
+        });
+        for (int j = 0; j < messagedSellersList.length; j++) {
+            total += (j + 1 + ") Seller: " + messagesReceivedEach.get(j).substring(messagesReceivedEach.get(j).indexOf(",") + 1, messagesReceivedEach.get(j).indexOf("%$%"))
+                    + ", Store Names: " + messagesReceivedEach.get(j).substring(messagesReceivedEach.get(j).indexOf("%$%") + 3) + "\n"
+                    + "Messages Received: " + messagesReceivedEach.get(j).substring(0, messagesReceivedEach.get(j).indexOf(",") + 1)) + "\n" +
+                    "*************************************************************\n";
+        }
+        return total;
+    }
     /*
         Makes new Customer
      */
