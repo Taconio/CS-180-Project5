@@ -228,12 +228,64 @@ public class MessagingServer {
                 oos.writeObject(sentStats);
                 oos.flush();
             }
+            if (action.equalsIgnoreCase("Edit Message")) {
+                String info = line.substring(line.indexOf(":") + 1);
+                String lineToEdit = info.split(",")[0];
+                String newLine = info.split(",")[1];
+                String sendMessageTo = reader.readLine();
+                String keyUser = reader.readLine();
+                boolean lineFound = false;
+                for (int x = 0; x < messages.get(sendMessageTo).size(); x++) {
+                    if (messages.get(sendMessageTo).get(x).contains(lineToEdit)) {
+                        if (!messages.get(sendMessageTo).get(x).contains(sendMessageTo)) {
+                            lineFound = true;
+                            messages.get(sendMessageTo).set(x,
+                                    messages.get(sendMessageTo).get(x).replace(lineToEdit, newLine));
+                        }
+                    }
+                }
+                if (lineFound) {
+                    writer.println("true");
+                    writer.flush();
+                    writeConversation(keyUser, sendMessageTo);
+                    oos.writeObject(getMessageLog(sendMessageTo));
+                    oos.flush();
+                } else {
+                    writer.println("false");
+                    writer.flush();
+                }
+            }
+            if (action.equalsIgnoreCase("Delete Message")) {
+                String lineToDelete = line.substring(line.indexOf(":") + 1);
+                String sendMessageTo = reader.readLine();
+                String keyUser = reader.readLine();
+                boolean lineFound = false;
+                for (int x = 0; x < messages.get(sendMessageTo).size(); x++) {
+                    if (messages.get(sendMessageTo).get(x).contains(lineToDelete)) {
+                        if (!messages.get(sendMessageTo).get(x).contains(sendMessageTo)) {
+                            lineFound = true;
+                            messages.get(sendMessageTo).remove(x);
+                        }
+                    }
+                }
+                if (lineFound) {
+                    writer.println("true");
+                    writer.flush();
+                    writeConversation(keyUser, sendMessageTo);
+                    oos.writeObject(getMessageLog(sendMessageTo));
+                    oos.flush();
+                } else {
+                    writer.println("false");
+                    writer.flush();
+                }
+            }
         }
         oos.close();
         ois.close();
         writer.close();
         reader.close();
     }
+
     public String customerStatsSentMessages() {
         String total = null;
         total = "Statistics Sorted by Number of Messages sent to Sellers\n" +
@@ -249,16 +301,16 @@ public class MessagingServer {
                 BufferedReader bfrUserInfo = new BufferedReader(fir);
                 String line2 = bfrUserInfo.readLine();
                 int count = 1;
-                while(line2 != null){
+                while (line2 != null) {
                     if ((count + 2) % 3 == 0) {
-                        String[] info = line2.split(",",5);
+                        String[] info = line2.split(",", 5);
                         if (info[3].equals("Seller")) {
                             if (info[0].equals(messagedSellersList[i])) {
                                 storeList.add("[" + info[4] + "]");
                             }
                         }
                     }
-                    count ++;
+                    count++;
                     line2 = bfrUserInfo.readLine();
                 }
                 FileReader fr = new FileReader(f);
@@ -280,7 +332,7 @@ public class MessagingServer {
             }
         }
         for (int i = 0; i < messagesReceivedEach.size(); i++) {
-            messagesReceivedEach.set(i,messagesReceivedEach.get(i) + "%$%" + storeList.get(i));
+            messagesReceivedEach.set(i, messagesReceivedEach.get(i) + "%$%" + storeList.get(i));
         }
         Collections.sort(messagesReceivedEach, new Comparator<String>() {
             public int compare(String s1, String s2) {
@@ -313,16 +365,16 @@ public class MessagingServer {
                 BufferedReader bfrUserInfo = new BufferedReader(fir);
                 String line2 = bfrUserInfo.readLine();
                 int count = 1;
-                while(line2 != null){
+                while (line2 != null) {
                     if ((count + 2) % 3 == 0) {
-                        String[] info = line2.split(",",5);
+                        String[] info = line2.split(",", 5);
                         if (info[3].equals("Seller")) {
                             if (info[0].equals(messagedSellersList[i])) {
                                 storeList.add("[" + info[4] + "]");
                             }
                         }
                     }
-                    count ++;
+                    count++;
                     line2 = bfrUserInfo.readLine();
                 }
                 FileReader fr = new FileReader(f);
@@ -344,7 +396,7 @@ public class MessagingServer {
             }
         }
         for (int i = 0; i < messagesReceivedEach.size(); i++) {
-            messagesReceivedEach.set(i,messagesReceivedEach.get(i) + "%$%" + storeList.get(i));
+            messagesReceivedEach.set(i, messagesReceivedEach.get(i) + "%$%" + storeList.get(i));
         }
         Collections.sort(messagesReceivedEach, new Comparator<String>() {
             public int compare(String s1, String s2) {
@@ -361,6 +413,7 @@ public class MessagingServer {
         }
         return total;
     }
+
     /*
         Makes new Customer
      */
