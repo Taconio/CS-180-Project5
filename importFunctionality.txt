@@ -1,0 +1,68 @@
+
+
+           //Button for the import:
+           private JButton importFile;
+
+           IN THE public MessagingApp():
+           //Button size and name:
+           importFile = new JButton("Import and send file");
+           importFile.setBounds(10, 381 - 40, 230, 30);
+           //To add to the panel:
+           buttonActivation(importFile);
+           messagingPanel.add(importFile);
+
+          //May also need to add the invisibility option if the user hasn't selected a user to message
+          //Also the feature (if needed) to display in the text box, but it does show in the customer&seller.txt (sample) file
+
+           //This code have the fuctionality and GUI, it creates a panel that asks the user to input a
+            file, read the contents and write to the customer&seller.txt file that also keeps the conversations:
+
+            if (actionCommand.equalsIgnoreCase("Import and send file")) {
+                String fileName = JOptionPane.showInputDialog(frame, "Please introduce the " +
+                        "file name to read and send:", "Import file", JOptionPane.QUESTION_MESSAGE);
+
+                if (fileName != null && !fileName.isEmpty()) {
+                    File selectedFile = new File(fileName);
+
+                    if (selectedFile.exists()) {
+                        try {
+                            StringBuilder messageContent = new StringBuilder();
+                            String messageLine;
+
+                            BufferedReader bfr2 = new BufferedReader(new FileReader(selectedFile));
+
+                            while ((messageLine = bfr2.readLine()) != null) {
+                                messageContent.append(messageLine).append(" ");
+                            }
+                            bfr2.close();
+
+                            JOptionPane.showMessageDialog(frame, "File content sent successfully!",
+                                    "Import file", JOptionPane.INFORMATION_MESSAGE);
+
+                            if (isCustomer)
+                                fileName = currentUser + "&" + sendMessageTo + ".txt";
+                            else fileName = sendMessageTo + "&" + currentUser + ".txt";
+                            File conversationFile = new File(fileName);
+                            PrintWriter pw1 = new PrintWriter(new FileOutputStream(conversationFile, true));
+
+                            DateTimeFormatter globalFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy 'at' hh:mma z");
+                            ZonedDateTime currentISTime = ZonedDateTime.now();
+                            ZonedDateTime currentETime = currentISTime.withZoneSameInstant(ZoneId.of(
+                                    "America/New_York"));
+                            String timeStamp = globalFormat.format(currentETime);
+
+                            pw1.println(timeStamp + "," + currentUser + ": " + messageContent);
+                            pw1.close();
+
+                        } catch (IOException exception) {
+                            exception.printStackTrace();
+                            JOptionPane.showMessageDialog(frame, "There have been" +
+                                    "an error when importing the file!", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "The file does not exist please introduce a " +
+                                "valid file name.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+
+            }
