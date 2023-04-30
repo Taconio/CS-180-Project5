@@ -44,6 +44,8 @@ public class MessagingApp extends JComponent implements Runnable {
     private Customer customer;
     private Seller seller;
     private Socket socket;
+    private JButton sellerStatisticsSent;
+    private JButton viewStatsButton;
     private ArrayList<Customer> customers;
     private ArrayList<Seller> sellers;
     private ObjectOutputStream oos;
@@ -59,6 +61,13 @@ public class MessagingApp extends JComponent implements Runnable {
     private String sendMessageTo;
     private String total;
     private String cSentStats;
+    private String sellerSentStats;
+    private String unsorted;
+    private JButton importFile;
+
+    private JButton refreshButton;
+
+
 
     /* action listener for buttons */
     ActionListener actionListener = new ActionListener() {
@@ -80,9 +89,13 @@ public class MessagingApp extends JComponent implements Runnable {
                 JLabel newMessagesOption;
                 JLabel statsDashboard;
                 exportToCsv.setVisible(false);
+                importFile.setVisible(false);
+                refreshButton.setVisible(false);
                 if (isCustomer) {
                     cStatisticsReceived.setVisible(true);
                     cStatisticsSent.setVisible(true);
+                    sellerStatisticsSent.setVisible(false);
+                    viewStatsButton.setVisible(false);
                     currentUser = username.getText();
                     pw = password.getText();
                     writer.println("Login Customer:" + currentUser + "," + pw);
@@ -110,6 +123,8 @@ public class MessagingApp extends JComponent implements Runnable {
                 } else {
                     cStatisticsSent.setVisible(false);
                     cStatisticsReceived.setVisible(false);
+                    sellerStatisticsSent.setVisible(true);
+                    viewStatsButton.setVisible(true);
                     currentUser = sUsername.getText();
                     pw = sPassword.getText();
                     writer.println("Login Seller:" + currentUser + "," + pw);
@@ -160,15 +175,18 @@ public class MessagingApp extends JComponent implements Runnable {
                 JLabel newMessagesOption;
                 JLabel statsDashboard;
                 exportToCsv.setVisible(false);
-                cStatisticsReceived.setVisible(true);
-                cStatisticsSent.setVisible(true);
-
+                importFile.setVisible(false);
+                refreshButton.setVisible(false);
                 if (isCustomer) {
                     currentUser = newUsername.getText();
                     pw = newPassword.getText();
                     email = newEmail.getText();
                     writer.println("Create Customer:" + currentUser + "," + pw + "," + email);
                     writer.flush();
+                    cStatisticsReceived.setVisible(true);
+                    cStatisticsSent.setVisible(true);
+                    sellerStatisticsSent.setVisible(false);
+                    viewStatsButton.setVisible(false);
                     try {
                         customer = (Customer) ois.readObject();
                         listOfUsers = (String[]) ois.readObject();
@@ -190,6 +208,10 @@ public class MessagingApp extends JComponent implements Runnable {
                     statsDashboard = new JLabel("View conversation statistics:");
                     statsDashboard.setBounds(10, 140, 180, 20);
                 } else {
+                    cStatisticsReceived.setVisible(false);
+                    cStatisticsSent.setVisible(false);
+                    sellerStatisticsSent.setVisible(true);
+                    viewStatsButton.setVisible(true);
                     currentUser = sNewUsername.getText();
                     pw = sNewPassword.getText();
                     email = sNewEmail.getText();
@@ -234,11 +256,10 @@ public class MessagingApp extends JComponent implements Runnable {
                 if (messageList.getSelectedItem() != null) {
                     String line = ((String) messageList.getSelectedItem()).split(",")[0];
                     exportToCsv.setVisible(true);
-
+                    importFile.setVisible(true);
+                    refreshButton.setVisible(true);
 
                     if (isCustomer) {
-                        cStatisticsReceived.setVisible(true);
-                        cStatisticsSent.setVisible(true);
 
                         if (!line.equalsIgnoreCase("No messages with sellers")) {
                             exportToCsv.setBounds(10, 421, 230, 30);
@@ -277,9 +298,8 @@ public class MessagingApp extends JComponent implements Runnable {
             if (e.getSource().equals(newMessageList)) {
                 if (newMessageList.getSelectedItem() != null) {
                     exportToCsv.setVisible(false);
-                    cStatisticsReceived.setVisible(true);
-                    cStatisticsSent.setVisible(true);
-
+                    importFile.setVisible(false);
+                    refreshButton.setVisible(false);
                     String line = ((String) newMessageList.getSelectedItem()).split(",")[0];
                     messagesPane.setText("");
                     if (isCustomer) {
@@ -473,6 +493,130 @@ public class MessagingApp extends JComponent implements Runnable {
                     y.printStackTrace();
                 }
             }
+            if (actionCommand.equalsIgnoreCase("View Sorted Stats")) { //seller
+                if (isSeller) {
+                    writer.println("View Sorted Stats1: ");
+                    writer.flush();
+                    try {
+                        sellerSentStats = (String) ois.readObject();
+                    } catch (IOException | ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    JOptionPane.showMessageDialog(null,
+                            sellerSentStats, "Statistics", JOptionPane.PLAIN_MESSAGE);
+                }
+            }
+            if (actionCommand.equalsIgnoreCase("Stats of Messages Received")) {
+                if (isSeller) {
+                    writer.println("Stats of Messages Received: ");
+                    writer.flush();
+                    try {
+                        unsorted = (String) ois.readObject();
+                    } catch (IOException | ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    JOptionPane.showMessageDialog(null,
+                            unsorted, "Statistics", JOptionPane.PLAIN_MESSAGE);
+                }
+            }
+            if (actionCommand.equalsIgnoreCase("Import and Send file")) {
+                String fileName = JOptionPane.showInputDialog(frame, "Please type the " +
+                        "file name to read and send:", "Import file", JOptionPane.QUESTION_MESSAGE);
+
+                if (fileName != null && !fileName.isEmpty()) {
+                    File selectedFile = new File(fileName);
+
+                    if (selectedFile.exists()) {
+                        try {
+                            StringBuilder messageContent = new StringBuilder();
+                            String messageLine;
+
+                            BufferedReader bfr2 = new BufferedReader(new FileReader(selectedFile));
+
+                            while ((messageLine = bfr2.readLine()) != null) {
+                                messageContent.append(messageLine).append(" ");
+                            }
+                            bfr2.close();
+                            writer.println("Send Message:" + messageContent);
+                            if (isCustomer) {
+                                writer.println("Seller" + "," + sendMessageTo);
+                                writer.flush();
+                                try {
+                                    messagesPane.setText((String) ois.readObject());
+                                } catch (Exception y) {
+                                    y.printStackTrace();
+                                }
+                            } else {
+                                writer.println("Customer" + "," + sendMessageTo);
+                                writer.flush();
+                                try {
+                                    messagesPane.setText((String) ois.readObject());
+                                } catch (Exception y) {
+                                    y.printStackTrace();
+                                }
+                            }
+
+                        } catch (IOException exception) {
+                            exception.printStackTrace();
+                            JOptionPane.showMessageDialog(frame, "There has been" +
+                                    "an error when importing the file!", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "The file does not exist please type a " +
+                                "valid file name.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+            if(actionCommand.equalsIgnoreCase("Refresh Chat")){
+                if(isCustomer)
+                    writer.println("Refresh:" + sendMessageTo + "," + "Seller");
+                else
+                    writer.println("Refresh:" + sendMessageTo + "," + "Customer");
+                writer.flush();
+                try{
+                    messagesPane.setText((String) ois.readObject());
+                }catch(Exception y){
+                    y.printStackTrace();
+                }
+            }
+            if(actionCommand.equalsIgnoreCase("Block User")){
+                String result = "";
+                do {
+                    String userToBlock = JOptionPane.showInputDialog(null,
+                            "Enter User you want to block:", "BLock user", JOptionPane.QUESTION_MESSAGE);
+                    if (isCustomer)
+                        writer.println("Block:" + userToBlock + "," + "Seller");
+                    else
+                        writer.println("Block:" + userToBlock + "," + "Customer");
+                    writer.flush();
+                    try{
+                        result = reader.readLine();
+                    }catch(Exception y){
+                        y.printStackTrace();
+                    }
+                }while(result.equalsIgnoreCase("Failed"));
+
+                if(result.equalsIgnoreCase("Done Blocking"))
+                    JOptionPane.showMessageDialog(null,
+                            "Blocked User!", "Blocked!", JOptionPane.PLAIN_MESSAGE);
+                else JOptionPane.showMessageDialog(null,
+                        "Unblocked User!", "Unblocked!", JOptionPane.PLAIN_MESSAGE);
+                try{
+                    listOfUsers = (String[]) ois.readObject();
+                    newChatOptions = (String[]) ois.readObject();
+                }catch(Exception y){
+                    y.printStackTrace();
+                }
+                messageList.removeAllItems();
+                for (int y = 0; y < listOfUsers.length; y++)
+                    messageList.addItem(listOfUsers[y]);
+                //newMessageList.setVisible(false);
+                newMessageList.removeAllItems();
+                for (int y = 0; y < newChatOptions.length; y++)
+                    newMessageList.addItem(newChatOptions[y]);
+                messagingPanel.add(newMessageList);
+                messageList.setSelectedItem(messageList.getItemAt(listOfUsers.length - 1));
+            }
         }
     };
 
@@ -522,17 +666,24 @@ public class MessagingApp extends JComponent implements Runnable {
         startingNew = false;
         exportToCsv = new JButton("Export to CSV");
         exportToCsv.setBounds(10, 381, 230, 30);
+        messagingPanel.add(exportToCsv);
+        buttonActivation(exportToCsv);
         cStatisticsReceived = new JButton("Sort Stats by Messages Received");
         cStatisticsReceived.setBounds(10, 170, 230, 30);
-        cStatisticsSent = new JButton("Sort Stats by Messages Sent");
-        cStatisticsSent.setBounds(10, 207, 230, 30);
-        buttonActivation(exportToCsv);
-
-        messagingPanel.add(exportToCsv);
         buttonActivation(cStatisticsReceived);
         messagingPanel.add(cStatisticsReceived);
+        cStatisticsSent = new JButton("Sort Stats by Messages Sent");
+        cStatisticsSent.setBounds(10, 207, 230, 30);
         buttonActivation(cStatisticsSent);
         messagingPanel.add(cStatisticsSent);
+        sellerStatisticsSent = new JButton("View Sorted Stats");
+        sellerStatisticsSent.setBounds(10, 207, 230, 30);
+        buttonActivation(sellerStatisticsSent);
+        messagingPanel.add(sellerStatisticsSent);
+        viewStatsButton = new JButton("Stats of Messages Received");
+        viewStatsButton.setBounds(10, 170, 230, 30);
+        buttonActivation(viewStatsButton);
+        messagingPanel.add(viewStatsButton);
     }
 
 
@@ -546,20 +697,11 @@ public class MessagingApp extends JComponent implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        /* set up JFrame */
-        //messagingApp = new MessagingApp();
-        //frame.add(messagingApp, BorderLayout.CENTER);
-        //Container content = frame.getContentPane();
-        //content.setLayout(new BorderLayout());
-        //messagingApp = new MessagingApp();
-        //content.add(messagingApp, BorderLayout.CENTER);
 
         frame.setSize(720, 590);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
-
-        // welcome screen
 
         JLabel welcomeText = new JLabel("Welcome to the messaging app! Are you a Customer or a Seller?");
         welcomeText.setBounds(180, 140, 400, 50);
@@ -570,14 +712,10 @@ public class MessagingApp extends JComponent implements Runnable {
         customerButton.setBounds(280, 220, 150, 50);
         sellerButton.setBounds(280, 290, 150, 50);
 
-        //welcomeScreen.setBounds(0,0,720,590);
-        //welcomeScreen.add(welcomeText);
         welcomeScreen.add(welcomeText);
         welcomeScreen.add(customerButton);
         welcomeScreen.add(sellerButton);
         frame.setContentPane(welcomeScreen);
-        //welcomeScreen.setVisible(true);
-
 
         //customer login panel
         JButton login = new JButton("Login");
@@ -667,12 +805,32 @@ public class MessagingApp extends JComponent implements Runnable {
         messagesPane.setEditable(false);
         messagesPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JScrollPane scrollPane = new JScrollPane(messagesPane);
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         messagingLog.add(messagesPane);
         messagingLog.add(scrollPane);
         messagesPane.setBounds(0, 0, 445, 476);
         scrollPane.setBounds(445, 0, 10, 476);
         messagingLog.add(messageBox);
         messageBox.setVisible(false);
+
+        importFile = new JButton("Import and Send file");
+        importFile.setBounds(10, 381 - 40, 230, 30);
+        buttonActivation(importFile);
+        messagingPanel.add(importFile);
+        importFile.setVisible(false);
+
+        refreshButton = new JButton("Refresh Chat");
+        refreshButton.setBounds(10, 381 - 80, 230, 30);
+        buttonActivation(refreshButton);
+        messagingPanel.add(refreshButton);
+        refreshButton.setVisible(false);
+
+        JButton blockButton = new JButton("Block User");
+        blockButton.setBounds(10, 381 - 120, 230, 30);
+        buttonActivation(blockButton);
+        messagingPanel.add(blockButton);
+        blockButton.setVisible(true);
     }
 
     public void establishConnection() throws UnknownHostException, IOException, ClassNotFoundException {
