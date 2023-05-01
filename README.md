@@ -1,7 +1,4 @@
 # CS-180-GroupProject
-_____________________
-For project 4 our group chose option 2. For this we used lists and hashmaps in Main to hold information during runtime, adding the
-contents of these to txt files as a way to hold information after program has been run. Everyone committed changes to the project, but in the end we deleted all of them and upated main with the most recent code so it may not show everyone made changes, but everyone did help in making this project.
 
 ## Program Flow
 _____________________
