@@ -19,10 +19,11 @@ The basic flow of this program is as follows: <br />
    1. If the user is a seller they can view statistics based on the messages they have received from customers.
    2. If user is a customer they can view statistics based on messages they have sent to stores and messages they have received.
 6. User also has access to a refresh button in case another user has sent a message while they were online which updates their chat logs.
-7. Finally, users can change their information:
+7. Users can change their information:
    1. Customers can change their email by pressing the change email button.
    2. Sellers can also change email and can additionally add new stores to their store list.
-8. After user is done using the ap they can press the logout button which saves their data and exits the application.
+8. Finally, users can block and unblock other users by pressing the block user button and typing the desired username into the JOption popup.
+9. After user is done using the ap they can press the logout button which saves their data and exits the application.
 <br />
 
 ## Vocarium Submissions
