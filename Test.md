@@ -150,8 +150,7 @@
 2. Load existing conversation with user
 3. Click block user
 4. Type username to unblock
-5. Logout
 
-**Expectation**: Now, the blocked user will be unblocked and conversation features should display again after logout
+**Expectation**: Now, the blocked user will be unblocked and start conversation features should display again
 
 **TEST PASSED**
