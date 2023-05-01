@@ -29,7 +29,7 @@ The basic flow of this program is as follows: <br />
 ## Vocarium Submissions
 _____________________
 Project Report Submission: Will Greenwood <br />
-Project Workspace Submission: Parth Thakre
+Project Workspace Submission: Parth Thakre <br />
 Project Presentation Submission: Parth Thakre
 
 ## Class Overview
